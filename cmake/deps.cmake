@@ -1,0 +1,168 @@
+include(FetchContent)
+
+FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG        v1.8.4
+    GIT_SHALLOW    TRUE
+)
+set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_INSTALL     OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googlebenchmark)
+
+FetchContent_Declare(
+    join
+    GIT_REPOSITORY https://github.com/joinframework/join.git
+    GIT_TAG        main
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(join)
+if(NOT join_POPULATED)
+    FetchContent_Populate(join)
+endif()
+add_library(join_json STATIC
+    ${join_SOURCE_DIR}/core/src/error.cpp
+    ${join_SOURCE_DIR}/data/src/value.cpp
+    ${join_SOURCE_DIR}/data/src/sax.cpp
+    ${join_SOURCE_DIR}/data/src/json.cpp
+)
+add_library(join::json ALIAS join_json)
+target_include_directories(join_json PUBLIC
+    ${join_SOURCE_DIR}/core/include
+    ${join_SOURCE_DIR}/data/include
+)
+target_compile_features(join_json PUBLIC cxx_std_14)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.11.3
+    GIT_SHALLOW    TRUE
+)
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+set(JSON_Install    OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(nlohmann_json)
+
+FetchContent_Declare(
+    rapidjson
+    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+    GIT_TAG        master
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(rapidjson)
+if(NOT rapidjson_POPULATED)
+    FetchContent_Populate(rapidjson)
+endif()
+add_library(rapidjson INTERFACE)
+add_library(rapidjson::rapidjson ALIAS rapidjson)
+target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    jsoncpp
+    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+    GIT_TAG        1.9.6
+    GIT_SHALLOW    TRUE
+)
+set(JSONCPP_WITH_TESTS               OFF CACHE BOOL "" FORCE)
+set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE BOOL "" FORCE)
+set(JSONCPP_WITH_PKGCONFIG_SUPPORT   OFF CACHE BOOL "" FORCE)
+set(JSONCPP_WITH_CMAKE_PACKAGE       OFF CACHE BOOL "" FORCE)
+set(BUILD_OBJECT_LIBS                OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(jsoncpp)
+
+FetchContent_Declare(
+    Boost
+    URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.tar.xz
+)
+set(BOOST_INCLUDE_LIBRARIES json)
+set(BOOST_ENABLE_CMAKE      ON)
+FetchContent_MakeAvailable(Boost)
+
+FetchContent_Declare(
+    simdjson
+    GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+    GIT_TAG        v3.10.0
+    GIT_SHALLOW    TRUE
+)
+set(SIMDJSON_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(simdjson)
+
+FetchContent_Declare(
+    taocpp_pegtl
+    GIT_REPOSITORY https://github.com/taocpp/PEGTL.git
+    GIT_TAG        3.2.8
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(taocpp_pegtl)
+if(NOT taocpp_pegtl_POPULATED)
+    FetchContent_Populate(taocpp_pegtl)
+endif()
+add_library(taocpp_pegtl_iface INTERFACE)
+add_library(taocpp::pegtl ALIAS taocpp_pegtl_iface)
+target_include_directories(taocpp_pegtl_iface INTERFACE ${taocpp_pegtl_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    taocpp_json
+    GIT_REPOSITORY https://github.com/taocpp/json.git
+    GIT_TAG        1.0.0-beta.14
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(taocpp_json)
+if(NOT taocpp_json_POPULATED)
+    FetchContent_Populate(taocpp_json)
+endif()
+add_library(taocpp_json_iface INTERFACE)
+add_library(taocpp::json ALIAS taocpp_json_iface)
+target_include_directories(taocpp_json_iface INTERFACE ${taocpp_json_SOURCE_DIR}/include)
+target_link_libraries(taocpp_json_iface INTERFACE taocpp::pegtl)
+
+FetchContent_Declare(
+    jsoncons
+    GIT_REPOSITORY https://github.com/danielaparker/jsoncons.git
+    GIT_TAG        v0.176.0
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(jsoncons)
+if(NOT jsoncons_POPULATED)
+    FetchContent_Populate(jsoncons)
+endif()
+add_library(jsoncons_iface INTERFACE)
+add_library(jsoncons::jsoncons ALIAS jsoncons_iface)
+target_include_directories(jsoncons_iface INTERFACE ${jsoncons_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    poco
+    GIT_REPOSITORY https://github.com/pocoproject/poco.git
+    GIT_TAG        poco-1.13.3-release
+    GIT_SHALLOW    TRUE
+)
+set(BUILD_SHARED_LIBS               OFF CACHE BOOL "" FORCE)
+set(ENABLE_TESTS                    OFF CACHE BOOL "" FORCE)
+set(ENABLE_SAMPLES                  OFF CACHE BOOL "" FORCE)
+set(ENABLE_ENCODINGS                OFF CACHE BOOL "" FORCE)
+set(ENABLE_ENCODINGS_COMPILER       OFF CACHE BOOL "" FORCE)
+set(ENABLE_XML                      OFF CACHE BOOL "" FORCE)
+set(ENABLE_JSON                     ON  CACHE BOOL "" FORCE)
+set(ENABLE_UTIL                     OFF CACHE BOOL "" FORCE)
+set(ENABLE_NET                      OFF CACHE BOOL "" FORCE)
+set(ENABLE_NETSSL                   OFF CACHE BOOL "" FORCE)
+set(ENABLE_NETSSL_WIN               OFF CACHE BOOL "" FORCE)
+set(ENABLE_CRYPTO                   OFF CACHE BOOL "" FORCE)
+set(ENABLE_JWT                      OFF CACHE BOOL "" FORCE)
+set(ENABLE_DATA                     OFF CACHE BOOL "" FORCE)
+set(ENABLE_DATA_SQLITE              OFF CACHE BOOL "" FORCE)
+set(ENABLE_DATA_MYSQL               OFF CACHE BOOL "" FORCE)
+set(ENABLE_DATA_ODBC                OFF CACHE BOOL "" FORCE)
+set(ENABLE_DATA_POSTGRESQL          OFF CACHE BOOL "" FORCE)
+set(ENABLE_MONGODB                  OFF CACHE BOOL "" FORCE)
+set(ENABLE_REDIS                    OFF CACHE BOOL "" FORCE)
+set(ENABLE_PROMETHEUS               OFF CACHE BOOL "" FORCE)
+set(ENABLE_ZIP                      OFF CACHE BOOL "" FORCE)
+set(ENABLE_SEVENZIP                 OFF CACHE BOOL "" FORCE)
+set(ENABLE_PAGECOMPILER             OFF CACHE BOOL "" FORCE)
+set(ENABLE_PAGECOMPILER_FILE2PAGE   OFF CACHE BOOL "" FORCE)
+set(ENABLE_ACTIVERECORD             OFF CACHE BOOL "" FORCE)
+set(ENABLE_ACTIVERECORD_COMPILER    OFF CACHE BOOL "" FORCE)
+set(ENABLE_APACHECONNECTOR          OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(poco)
