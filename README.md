@@ -204,6 +204,8 @@ Measured on a development machine. Re-run `scripts/run_bench.sh` to reproduce on
 
 **Statistics**: RapidJSON's five variants cluster at ~1 ms — their contiguous memory pool layout maximises cache efficiency. jsoncons (1.6 ms), simdjson (1.7 ms), Boost (1.9 ms), and taocpp (1.9 ms) all follow closely. Join (3.3 ms) and nlohmann (3.5 ms) are about 2× slower than RapidJSON. JsonCpp (16 ms) and POCO (22 ms) are again the outliers.
 
+Raw throughput is only part of the picture. A parser that silently accepts malformed input, produces slightly wrong floating-point values, or mangles escape sequences can introduce subtle bugs that are hard to reproduce and trace. The conformance suite measures what matters in production: does the library correctly reject invalid JSON, parse numbers to the right `double`, decode strings exactly as the spec requires, and reproduce the original representation on roundtrip?
+
 ### Conformance
 
 ![Conformance](plots/conformance.png)
@@ -218,13 +220,15 @@ Measured on a development machine. Re-run `scripts/run_bench.sh` to reproduce on
 
 ### Conclusion
 
-- **simdjson** is the fastest parser by a wide margin (~1.8× faster than RapidJSON insitu) and has strong conformance scores, but it is a parse-only library. Use it when you only need to read JSON at maximum speed and do not need to modify or re-serialise the document.
-- **RapidJSON** is the strongest all-rounder: near the top in every performance category, 100% conformance with `full-prec`, and a rich feature set (five parser modes benchmarked here cover the most common trade-offs). `insitu` mode is the fastest general-purpose DOM parser; `full-prec` restores bitwise-accurate double parsing at modest cost.
-- **Boost.JSON** is the fastest serialiser (10 ms) and has solid parse performance (15 ms). Its roundtrip failures on floats are worth noting if exact decimal reproduction matters.
-- **nlohmann/json** is a conformant general-purpose library (perfect double precision, 26/27 roundtrip) at the cost of parse throughput (83 ms, ~7× slower than RapidJSON insitu). A good default choice when ergonomics and correctness outweigh raw speed.
-- **Join** matches nlohmann's double precision and achieves a perfect roundtrip score (27/27), while parsing ~3.2× faster (26 ms). A good middle ground between RapidJSON's performance and nlohmann's ergonomics.
-- **taocpp/json** achieves perfect conformance (136/136) and competitive performance across all categories — parse (37 ms), prettify (29 ms), stringify (18 ms), statistics (1.9 ms). A strong option when correctness is paramount.
-- **jsoncons** achieves near-perfect conformance (134/136) with competitive statistics performance (1.6 ms, best among non-RapidJSON DOM libraries). Parse speed (77 ms) is similar to nlohmann.
+The best libraries are those that are both fast and correct. Several stand out on both axes:
+
+- **RapidJSON (`full-prec`)** is the top pick when you need maximum speed without sacrificing correctness: perfect conformance (136/136), fastest general-purpose DOM parser (`insitu` at 11 ms, `full-prec` at 13 ms), and the fastest serialiser among DOM libraries. The `full-prec` flag restores bitwise-accurate double parsing at a modest cost over the default mode. When raw parse speed is the priority and float precision is not critical, `insitu` or `default` mode drop those 18 double cases in exchange for a further 15–20% speedup.
+- **Join** achieves perfect conformance (136/136) — perfect double precision and a perfect roundtrip score — while parsing nearly as fast as RapidJSON's default mode (26 ms). It is the strongest all-rounder when both correctness and performance matter.
+- **taocpp/json** also reaches perfect conformance (136/136) with competitive performance across all categories (parse 37 ms, stringify 18 ms, prettify 29 ms). A solid choice when correctness is non-negotiable and RapidJSON's API is not a fit.
+- **simdjson** is the fastest parser by a wide margin (~1.8× faster than RapidJSON insitu at 6 ms) with strong conformance scores, but it is a read-only library. Use it when you only need to read JSON at maximum speed and do not need to modify or re-serialise the document.
+- **nlohmann/json** offers perfect double precision and near-perfect roundtrip (26/27) in a widely used, ergonomic API, at the cost of parse throughput (83 ms). A reasonable default when correctness and ease of use outweigh raw speed.
+- **jsoncons** achieves near-perfect conformance (134/136) with the best statistics performance among non-RapidJSON DOM libraries (1.6 ms). Parse speed (77 ms) is comparable to nlohmann.
+- **Boost.JSON** is the fastest serialiser overall (10 ms) with solid parse performance (15 ms), but its roundtrip score (19/27) is a concern if exact decimal reproduction of floats matters.
 - **JsonCpp** and **POCO** are consistently the slowest in every performance category and offer no conformance advantage. They are best avoided in performance-sensitive code.
 
 ## License
