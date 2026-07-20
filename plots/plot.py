@@ -93,17 +93,17 @@ def plot_deserialize(df: pd.DataFrame, output_dir: Path) -> None:
 
     idx = 0
     totals = parse_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-    _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), "1. Parse (overall)")
+    _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), "Overall")
     idx += 1
 
     for dataset in datasets:
         sub = parse_df[parse_df["dataset"] == dataset].groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], sub.index.tolist(), sub.values.tolist(), f"{idx + 1}. Parse — {dataset}")
+        _barh_ax(axes[idx], sub.index.tolist(), sub.values.tolist(), dataset)
         idx += 1
 
     if has_stats:
         totals = stats_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), f"{idx + 1}. DOM Statistics")
+        _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), "DOM Statistics")
 
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out = output_dir / "performance_parse.png"
@@ -127,11 +127,11 @@ def _plot_write_bench(df: pd.DataFrame, output_dir: Path, bench_type: str, filen
     fig.suptitle(title, fontsize=14, fontweight="bold")
 
     totals = sub_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-    _barh_ax(axes[0], totals.index.tolist(), totals.values.tolist(), "1. Overall")
+    _barh_ax(axes[0], totals.index.tolist(), totals.values.tolist(), "Overall")
 
     for idx, dataset in enumerate(datasets, start=1):
         per = sub_df[sub_df["dataset"] == dataset].groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], per.index.tolist(), per.values.tolist(), f"{idx + 1}. {dataset}")
+        _barh_ax(axes[idx], per.index.tolist(), per.values.tolist(), dataset)
 
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out = output_dir / filename
@@ -209,7 +209,7 @@ def plot_conformance(conf_path: str, output_dir: Path) -> None:
 
         ax.set_xlabel("%")
         ax.set_xlim(0, 115)
-        ax.set_title(label, fontsize=11, loc="left", pad=6)
+        ax.set_title(label, fontsize=11, fontweight="bold", loc="left", pad=6)
         _style_ax(ax)
 
     fig.tight_layout(rect=[0, 0, 1, 0.97])

@@ -63,7 +63,7 @@ RapidJSON is benchmarked in five configurations to isolate the impact of its par
 | `citm_catalog.json` | ~1.7 MB | Event catalog — deeply nested objects, mixed types |
 | `twitter.json` | ~0.6 MB | Social feed — Unicode strings, many small objects |
 
-Performance time reported per benchmark is the median across all three datasets combined (ms).
+The overall time reported per benchmark is the sum of median times across all three datasets (ms). Each individual measurement is already the median across repetitions.
 
 ## Build
 
@@ -198,13 +198,13 @@ Measured on a development machine. Re-run `scripts/run_bench.sh` to reproduce on
 
 ![Prettify](plots/performance_prettify.png)
 
-**Parse**: **simdjson** leads at 6 ms, more than 1.8× faster than the next best (**RapidJSON** insitu at 11 ms). Among the general-purpose DOM libraries, **RapidJSON**'s in-situ mode leads thanks to its zero-copy string handling, followed closely by the default and iterative variants (13–14 ms) and **Boost.JSON** (15 ms). **Join** (26 ms) sits between **RapidJSON** and the slower libraries. **taocpp/json** (37 ms) is competitive. **jsoncons** (77 ms) and **nlohmann/json** (83 ms) are slower but similar; **POCO** (129 ms) and **JsonCpp** (159 ms) trail significantly.
+**Parse**: **simdjson** leads at 6 ms, more than 1.8× faster than the next best (**RapidJSON** insitu at 12 ms). Among the general-purpose DOM libraries, **RapidJSON**'s in-situ mode leads thanks to its zero-copy string handling, followed closely by the default and iterative variants (14–15 ms) and **Boost.JSON** (16 ms). **Join** (29 ms) sits between **RapidJSON** and the slower libraries. **taocpp/json** (38 ms) is competitive. **jsoncons** (76 ms) and **nlohmann/json** (91 ms) are slower but similar; **POCO** (136 ms) and **JsonCpp** (142 ms) trail significantly.
 
-**Stringify**: **Boost.JSON** leads at 10 ms. All **RapidJSON** variants cluster tightly at ~15 ms. **taocpp/json** (18 ms) and **simdjson** (18 ms, minified output only) follow. **nlohmann/json** (21 ms) and **Join** (22 ms) are close; **jsoncons** (25 ms) is slightly behind. **POCO** (63 ms) and **JsonCpp** (165 ms) are the slowest.
+**Stringify**: **Boost.JSON** leads at 11 ms. All **RapidJSON** variants cluster tightly at ~18 ms. **simdjson** (21 ms, minified output only) and **taocpp/json** (23 ms) follow. **Join** (23 ms) and **nlohmann/json** (24 ms) are close; **jsoncons** (27 ms) is slightly behind. **POCO** (71 ms) and **JsonCpp** (173 ms) are the slowest.
 
-**Prettify**: **RapidJSON** variants lead at 19 ms across all five modes. **nlohmann/json** (27 ms) and **Join** (28 ms) follow, with **taocpp/json** (29 ms) close behind. **Boost.JSON** (42 ms) and **jsoncons** (53 ms) are slower. **JsonCpp** (173 ms) and **POCO** (198 ms) trail by a wide margin.
+**Prettify**: **RapidJSON** variants lead at ~19 ms across all five modes. **Boost.JSON** (27 ms) follows closely. **Join** (29 ms), **nlohmann/json** (30 ms), and **taocpp/json** (30 ms) are close behind. **jsoncons** (55 ms) is slower. **JsonCpp** (180 ms) and **POCO** (217 ms) trail by a wide margin.
 
-**Statistics**: **RapidJSON**'s five variants cluster at ~1 ms — their contiguous memory pool layout maximises cache efficiency. **jsoncons** (1.6 ms), **simdjson** (1.7 ms), **Boost.JSON** (1.9 ms), and **taocpp/json** (1.9 ms) all follow closely. **Join** (3.3 ms) and **nlohmann/json** (3.5 ms) are about 2× slower than **RapidJSON**. **JsonCpp** (16 ms) and **POCO** (22 ms) are again the outliers.
+**Statistics**: **RapidJSON**'s five variants cluster at ~1 ms — their contiguous memory pool layout maximises cache efficiency. **Boost.JSON** (1.6 ms), **jsoncons** (1.7 ms), **simdjson** (1.7 ms), and **taocpp/json** (2.0 ms) all follow closely. **Join** (3.5 ms) and **nlohmann/json** (3.8 ms) are about 3× slower than **RapidJSON**. **JsonCpp** (17 ms) and **POCO** (19 ms) are again the outliers.
 
 Raw throughput is only part of the picture. A parser that silently accepts malformed input, produces slightly wrong floating-point values, or mangles escape sequences can introduce subtle bugs that are hard to reproduce and trace. The conformance suite measures what matters in production: does the library correctly reject invalid JSON, parse numbers to the right `double`, decode strings exactly as the spec requires, and reproduce the original representation on roundtrip?
 
@@ -224,13 +224,13 @@ Raw throughput is only part of the picture. A parser that silently accepts malfo
 
 The best libraries are those that are both fast and correct. Several stand out on both axes:
 
-- **RapidJSON** is the top pick when you need maximum speed without sacrificing correctness: the `full-prec` mode achieves perfect conformance (136/136) and remains the fastest general-purpose DOM parser (`insitu` at 11 ms, `full-prec` at 13 ms), with the fastest serialiser among DOM libraries. When raw parse speed is the priority and float precision is not critical, `insitu` or `default` mode trade those 18 double cases for a further 15–20% speedup.
-- **Join** achieves perfect conformance (136/136) — perfect double precision and a perfect roundtrip score — while parsing nearly as fast as RapidJSON's default mode (26 ms). It is the strongest all-rounder when both correctness and performance matter.
-- **taocpp/json** also reaches perfect conformance (136/136) with competitive performance across all categories (parse 37 ms, stringify 18 ms, prettify 29 ms). A solid choice when correctness is non-negotiable and RapidJSON's API is not a fit.
+- **RapidJSON** offers the best overall speed profile: `insitu` (12 ms) and `default` (14 ms) are the fastest general-purpose DOM parsers, with all five variants leading in both stringify (~18 ms) and prettify (~19 ms). `full-prec` adds bitwise-accurate double parsing at a parse cost (22 ms) but still achieves perfect conformance (136/136). When float precision is not critical, `insitu` or `default` mode give maximum throughput at the cost of 18 double-precision cases.
+- **Join** achieves perfect conformance (136/136) — perfect double precision and a perfect roundtrip score — while parsing nearly as fast as RapidJSON's default mode (29 ms). It is the strongest all-rounder when both correctness and performance matter.
+- **taocpp/json** also reaches perfect conformance (136/136) with competitive performance across all categories (parse 38 ms, stringify 23 ms, prettify 30 ms). A solid choice when correctness is non-negotiable and RapidJSON's API is not a fit.
 - **simdjson** is the fastest parser by a wide margin (~1.8× faster than RapidJSON insitu at 6 ms) with strong conformance scores, but it is a read-only library. Use it when you only need to read JSON at maximum speed and do not need to modify or re-serialise the document.
-- **nlohmann/json** offers perfect double precision and near-perfect roundtrip (26/27) in a widely used, ergonomic API, at the cost of parse throughput (83 ms). A reasonable default when correctness and ease of use outweigh raw speed.
-- **jsoncons** achieves near-perfect conformance (134/136) with the best statistics performance among non-RapidJSON DOM libraries (1.6 ms). Parse speed (77 ms) is comparable to nlohmann.
-- **Boost.JSON** is the fastest serialiser overall (10 ms) with solid parse performance (15 ms), but its roundtrip score (19/27) is a concern if exact decimal reproduction of floats matters.
+- **nlohmann/json** offers perfect double precision and near-perfect roundtrip (26/27) in a widely used, ergonomic API, at the cost of parse throughput (91 ms). A reasonable default when correctness and ease of use outweigh raw speed.
+- **jsoncons** achieves near-perfect conformance (134/136) with competitive statistics performance (1.7 ms). Parse speed (76 ms) is comparable to nlohmann.
+- **Boost.JSON** is the fastest serialiser (11 ms), ranks second in prettify (27 ms, just behind RapidJSON), and has solid parse performance (16 ms). Its roundtrip score (19/27) is a concern if exact decimal reproduction of floats matters.
 - **JsonCpp** and **POCO** are consistently the slowest in every performance category and offer no conformance advantage. They are best avoided in performance-sensitive code.
 
 ## License

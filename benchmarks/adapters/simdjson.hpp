@@ -62,8 +62,8 @@ namespace simdjson_detail
 
     inline void pretty_impl (std::string& out, simdjson::dom::element e, int indent, int depth)
     {
-        const std::string pad (static_cast<size_t> (depth * indent), ' ');
-        const std::string inner (static_cast<size_t> ((depth + 1) * indent), ' ');
+        const auto pad_len   = static_cast<size_t> (depth * indent);
+        const auto inner_len = static_cast<size_t> ((depth + 1) * indent);
 
         switch (e.type ())
         {
@@ -77,7 +77,7 @@ namespace simdjson_detail
                         if (!first)
                             out += ',';
                         out += '\n';
-                        out += inner;
+                        out.append (inner_len, ' ');
                         out += escape_json_string (field.key);
                         out += ": ";
                         pretty_impl (out, field.value, indent, depth + 1);
@@ -86,7 +86,7 @@ namespace simdjson_detail
                     if (!first)
                     {
                         out += '\n';
-                        out += pad;
+                        out.append (pad_len, ' ');
                     }
                     out += '}';
                     break;
@@ -101,14 +101,14 @@ namespace simdjson_detail
                         if (!first)
                             out += ',';
                         out += '\n';
-                        out += inner;
+                        out.append (inner_len, ' ');
                         pretty_impl (out, elem, indent, depth + 1);
                         first = false;
                     }
                     if (!first)
                     {
                         out += '\n';
-                        out += pad;
+                        out.append (pad_len, ' ');
                     }
                     out += ']';
                     break;
