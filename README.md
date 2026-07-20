@@ -2,6 +2,8 @@
 
 Comparative benchmarks of JSON libraries in C++, measuring parse, stringify, prettify, and DOM statistics performance across three real-world datasets (Canada, CitmCatalog, Twitter). Includes a conformance suite covering parse validation, double precision, string decoding, and roundtrip correctness.
 
+Largely inspired by [nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark) by Milo Yip.
+
 ## Table of contents
 
 - [Libraries](#libraries)
@@ -91,7 +93,7 @@ Single binary:
 ./build/benchmarks/performance/bench_parse \
     --benchmark_format=json \
     --benchmark_out=results/parse.json \
-    --benchmark_repetitions=3 \
+    --benchmark_repetitions=10 \
     --benchmark_min_warmup_time=0.5 \
     --benchmark_report_aggregates_only=true
 ```
@@ -103,7 +105,7 @@ Conformance only:
 ```
 
 > [!NOTE]
-> Default: 3 repetitions, median is reported. Override with `REPETITIONS=10 bash scripts/run_bench.sh`.
+> Default: 10 repetitions, median is reported. Override with e.g. `REPETITIONS=3 bash scripts/run_bench.sh`.
 
 ## Plots
 
@@ -190,7 +192,7 @@ Measured on a development machine. Re-run `scripts/run_bench.sh` to reproduce on
 
 ### Performance
 
-![Read](plots/performance_parse.png)
+![Parse](plots/performance_parse.png)
 
 ![Stringify](plots/performance_stringify.png)
 
