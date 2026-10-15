@@ -1,19 +1,21 @@
 #include <benchmark/benchmark.h>
 
-#include "adapters/boost.hpp"
-#include "adapters/join.hpp"
-#include "adapters/jsoncons.hpp"
-#include "adapters/jsoncpp.hpp"
-#include "adapters/nlohmann.hpp"
-#include "adapters/poco.hpp"
-#include "adapters/rapidjson.hpp"
-#include "adapters/simdjson.hpp"
-#include "adapters/taocpp.hpp"
+#include <sys/resource.h>
+
+#include ADAPTER_HEADER
 #include "common/utils.hpp"
 
 static const std::string canada = load_file (DATA_DIR "/canada.json");
 static const std::string citm = load_file (DATA_DIR "/citm_catalog.json");
 static const std::string twitter = load_file (DATA_DIR "/twitter.json");
+
+static void set_minflt (benchmark::State& state, const rusage& before)
+{
+    rusage after;
+    getrusage (RUSAGE_SELF, &after);
+    state.counters["minflt"] = benchmark::Counter (static_cast<double> (after.ru_minflt - before.ru_minflt),
+                                                   benchmark::Counter::kAvgIterations);
+}
 
 template <typename Adapter>
 static void BM_Stringify (benchmark::State& state, const std::string* json)
@@ -24,11 +26,14 @@ static void BM_Stringify (benchmark::State& state, const std::string* json)
         state.SkipWithError ("Parse failed");
         return;
     }
+    rusage before;
+    getrusage (RUSAGE_SELF, &before);
     for (auto _ : state)
     {
         auto result = Adapter::stringify (*doc);
         benchmark::DoNotOptimize (result);
     }
+    set_minflt (state, before);
     state.SetBytesProcessed (state.iterations () * static_cast<int64_t> (json->size ()));
     state.SetLabel (std::string (Adapter::name));
 }
@@ -38,23 +43,11 @@ static void BM_Stringify (benchmark::State& state, const std::string* json)
         ->Name ("Stringify/" #tag "/" #Adapter)           \
         ->Unit (benchmark::kMillisecond)
 
-#define REGISTER_STRINGIFY_DATASET(tag, file)                  \
-    REGISTER_STRINGIFY (BoostAdapter, tag, file);              \
-    REGISTER_STRINGIFY (JoinAdapter, tag, file);               \
-    REGISTER_STRINGIFY (JsonConsAdapter, tag, file);           \
-    REGISTER_STRINGIFY (JsonCppAdapter, tag, file);            \
-    REGISTER_STRINGIFY (NlohmannAdapter, tag, file);           \
-    REGISTER_STRINGIFY (PocoAdapter, tag, file);               \
-    REGISTER_STRINGIFY (RapidJsonAutoUtfAdapter, tag, file);   \
-    REGISTER_STRINGIFY (RapidJsonAdapter, tag, file);          \
-    REGISTER_STRINGIFY (RapidJsonFullPrecAdapter, tag, file);  \
-    REGISTER_STRINGIFY (RapidJsonInsituAdapter, tag, file);    \
-    REGISTER_STRINGIFY (RapidJsonIterativeAdapter, tag, file); \
-    REGISTER_STRINGIFY (SimdJsonAdapter, tag, file);           \
-    REGISTER_STRINGIFY (TaoCppAdapter, tag, file)
+#define X(Adapter)                                \
+    REGISTER_STRINGIFY (Adapter, Canada, canada); \
+    REGISTER_STRINGIFY (Adapter, Citm, citm);     \
+    REGISTER_STRINGIFY (Adapter, Twitter, twitter);
 
-REGISTER_STRINGIFY_DATASET (Canada, canada);
-REGISTER_STRINGIFY_DATASET (Citm, citm);
-REGISTER_STRINGIFY_DATASET (Twitter, twitter);
+BENCH_ADAPTERS
 
 BENCHMARK_MAIN ();

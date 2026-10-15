@@ -61,21 +61,21 @@ namespace rapidjson_detail
         }
     }
 
-    inline std::string do_stringify (const rapidjson::Value& v)
+    inline rapidjson::StringBuffer do_stringify (const rapidjson::Value& v)
     {
         rapidjson::StringBuffer sb;
         rapidjson::Writer<rapidjson::StringBuffer> writer (sb);
         v.Accept (writer);
-        return {sb.GetString (), sb.GetSize ()};
+        return sb;
     }
 
-    inline std::string do_prettify (const rapidjson::Value& v, int indent = 4)
+    inline rapidjson::StringBuffer do_prettify (const rapidjson::Value& v, int indent = 4)
     {
         rapidjson::StringBuffer sb;
         rapidjson::PrettyWriter<rapidjson::StringBuffer> writer (sb);
         writer.SetIndent (' ', static_cast<unsigned> (indent));
         v.Accept (writer);
-        return {sb.GetString (), sb.GetSize ()};
+        return sb;
     }
 
 }
@@ -83,6 +83,8 @@ namespace rapidjson_detail
 template <unsigned Flags>
 struct RapidJsonCopyBase
 {
+    static constexpr bool lossy_numbers = !(Flags & rapidjson::kParseFullPrecisionFlag);
+
     using Document = rapidjson::Document;
 
     static std::optional<Document> parse (std::string_view json)
@@ -94,14 +96,19 @@ struct RapidJsonCopyBase
         return doc;
     }
 
-    static std::string stringify (const Document& d)
+    static rapidjson::StringBuffer stringify (const Document& d)
     {
         return rapidjson_detail::do_stringify (d);
     }
 
-    static std::string prettify (const Document& d, int i = 4)
+    static rapidjson::StringBuffer prettify (const Document& d, int i = 4)
     {
         return rapidjson_detail::do_prettify (d, i);
+    }
+
+    static std::string_view view (const rapidjson::StringBuffer& sb)
+    {
+        return {sb.GetString (), sb.GetSize ()};
     }
 
     static Stat statistics (const Document& d)
@@ -138,6 +145,8 @@ struct RapidJsonCopyBase
 template <unsigned ExtraFlags = rapidjson::kParseDefaultFlags>
 struct RapidJsonInsituBase
 {
+    static constexpr bool lossy_numbers = true;
+
     struct Document
     {
         std::vector<char> buf;
@@ -161,14 +170,19 @@ struct RapidJsonInsituBase
         return result;
     }
 
-    static std::string stringify (const Document& d)
+    static rapidjson::StringBuffer stringify (const Document& d)
     {
         return rapidjson_detail::do_stringify (d.doc);
     }
 
-    static std::string prettify (const Document& d, int i = 4)
+    static rapidjson::StringBuffer prettify (const Document& d, int i = 4)
     {
         return rapidjson_detail::do_prettify (d.doc, i);
+    }
+
+    static std::string_view view (const rapidjson::StringBuffer& sb)
+    {
+        return {sb.GetString (), sb.GetSize ()};
     }
 
     static Stat statistics (const Document& d)
@@ -206,27 +220,28 @@ struct RapidJsonInsituBase
 
 struct RapidJsonAdapter : RapidJsonCopyBase<rapidjson::kParseDefaultFlags>
 {
-    static constexpr std::string_view name = "Default";
+    static constexpr std::string_view name = "rapidjson";
 };
 
 struct RapidJsonFullPrecAdapter : RapidJsonCopyBase<rapidjson::kParseFullPrecisionFlag>
 {
-    static constexpr std::string_view name = "FullPrec";
+    static constexpr std::string_view name = "rapidjson/full-prec";
 };
 
 struct RapidJsonIterativeAdapter : RapidJsonCopyBase<rapidjson::kParseIterativeFlag>
 {
-    static constexpr std::string_view name = "Iterative";
+    static constexpr std::string_view name = "rapidjson/iterative";
 };
 
 struct RapidJsonInsituAdapter : RapidJsonInsituBase<rapidjson::kParseDefaultFlags>
 {
-    static constexpr std::string_view name = "Insitu";
+    static constexpr std::string_view name = "rapidjson/insitu";
 };
 
 struct RapidJsonAutoUtfAdapter
 {
-    static constexpr std::string_view name = "AutoUTF";
+    static constexpr std::string_view name = "rapidjson/auto-utf";
+    static constexpr bool lossy_numbers = true;
     using Document = rapidjson::Document;
 
     static std::optional<Document> parse (std::string_view json)
@@ -240,14 +255,19 @@ struct RapidJsonAutoUtfAdapter
         return doc;
     }
 
-    static std::string stringify (const Document& d)
+    static rapidjson::StringBuffer stringify (const Document& d)
     {
         return rapidjson_detail::do_stringify (d);
     }
 
-    static std::string prettify (const Document& d, int i = 4)
+    static rapidjson::StringBuffer prettify (const Document& d, int i = 4)
     {
         return rapidjson_detail::do_prettify (d, i);
+    }
+
+    static std::string_view view (const rapidjson::StringBuffer& sb)
+    {
+        return {sb.GetString (), sb.GetSize ()};
     }
 
     static Stat statistics (const Document& d)

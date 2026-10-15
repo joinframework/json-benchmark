@@ -1,19 +1,21 @@
 #include <benchmark/benchmark.h>
 
-#include "adapters/boost.hpp"
-#include "adapters/join.hpp"
-#include "adapters/jsoncons.hpp"
-#include "adapters/jsoncpp.hpp"
-#include "adapters/nlohmann.hpp"
-#include "adapters/poco.hpp"
-#include "adapters/rapidjson.hpp"
-#include "adapters/simdjson.hpp"
-#include "adapters/taocpp.hpp"
+#include <sys/resource.h>
+
+#include ADAPTER_HEADER
 #include "common/utils.hpp"
 
 static const std::string canada = load_file (DATA_DIR "/canada.json");
 static const std::string citm = load_file (DATA_DIR "/citm_catalog.json");
 static const std::string twitter = load_file (DATA_DIR "/twitter.json");
+
+static void set_minflt (benchmark::State& state, const rusage& before)
+{
+    rusage after;
+    getrusage (RUSAGE_SELF, &after);
+    state.counters["minflt"] = benchmark::Counter (static_cast<double> (after.ru_minflt - before.ru_minflt),
+                                                   benchmark::Counter::kAvgIterations);
+}
 
 template <typename Adapter>
 static void BM_Statistics (benchmark::State& state, const std::string* json)
@@ -24,11 +26,14 @@ static void BM_Statistics (benchmark::State& state, const std::string* json)
         state.SkipWithError ("Parse failed");
         return;
     }
+    rusage before;
+    getrusage (RUSAGE_SELF, &before);
     for (auto _ : state)
     {
         auto stat = Adapter::statistics (*doc);
         benchmark::DoNotOptimize (stat);
     }
+    set_minflt (state, before);
     state.SetBytesProcessed (state.iterations () * static_cast<int64_t> (json->size ()));
     state.SetLabel (std::string (Adapter::name));
 }
@@ -38,23 +43,11 @@ static void BM_Statistics (benchmark::State& state, const std::string* json)
         ->Name ("Statistics/" #tag "/" #Adapter)           \
         ->Unit (benchmark::kMillisecond)
 
-#define REGISTER_STATISTICS_DATASET(tag, file)                  \
-    REGISTER_STATISTICS (BoostAdapter, tag, file);              \
-    REGISTER_STATISTICS (JoinAdapter, tag, file);               \
-    REGISTER_STATISTICS (JsonConsAdapter, tag, file);           \
-    REGISTER_STATISTICS (JsonCppAdapter, tag, file);            \
-    REGISTER_STATISTICS (NlohmannAdapter, tag, file);           \
-    REGISTER_STATISTICS (PocoAdapter, tag, file);               \
-    REGISTER_STATISTICS (RapidJsonAutoUtfAdapter, tag, file);   \
-    REGISTER_STATISTICS (RapidJsonAdapter, tag, file);          \
-    REGISTER_STATISTICS (RapidJsonFullPrecAdapter, tag, file);  \
-    REGISTER_STATISTICS (RapidJsonInsituAdapter, tag, file);    \
-    REGISTER_STATISTICS (RapidJsonIterativeAdapter, tag, file); \
-    REGISTER_STATISTICS (SimdJsonAdapter, tag, file);           \
-    REGISTER_STATISTICS (TaoCppAdapter, tag, file)
+#define X(Adapter)                                 \
+    REGISTER_STATISTICS (Adapter, Canada, canada); \
+    REGISTER_STATISTICS (Adapter, Citm, citm);     \
+    REGISTER_STATISTICS (Adapter, Twitter, twitter);
 
-REGISTER_STATISTICS_DATASET (Canada, canada);
-REGISTER_STATISTICS_DATASET (Citm, citm);
-REGISTER_STATISTICS_DATASET (Twitter, twitter);
+BENCH_ADAPTERS
 
 BENCHMARK_MAIN ();

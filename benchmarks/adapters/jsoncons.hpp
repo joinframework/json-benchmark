@@ -33,14 +33,14 @@ namespace jsoncons_detail
                 gen_stat (stat, elem);
             }
         }
+        else if (v.is_number ())
+        {
+            stat.number_count++;
+        }
         else if (v.is_string ())
         {
             stat.string_count++;
             stat.string_length += v.as_string_view ().size ();
-        }
-        else if (v.is_number ())
-        {
-            stat.number_count++;
         }
         else if (v.is_bool ())
         {
@@ -57,17 +57,18 @@ namespace jsoncons_detail
 
 }
 
-struct JsonConsAdapter
+template <bool Lossless>
+struct JsonConsBase
 {
-    static constexpr std::string_view name = "jsoncons";
-
     using Document = jsoncons::json;
 
     static std::optional<Document> parse (std::string_view json)
     {
         try
         {
-            return jsoncons::json::parse (jsoncons::string_view (json.data (), json.size ()));
+            jsoncons::json_options options;
+            options.lossless_number (Lossless);
+            return jsoncons::json::parse (jsoncons::string_view (json.data (), json.size ()), options);
         }
         catch (...)
         {
@@ -78,7 +79,14 @@ struct JsonConsAdapter
     static std::string stringify (const Document& doc)
     {
         std::string s;
-        doc.dump (s);
+        if constexpr (Lossless)
+        {
+            jsoncons::json_options options;
+            options.bigint_format (jsoncons::bigint_chars_format::number);
+            doc.dump (s, options);
+        }
+        else
+            doc.dump (s);
         return s;
     }
 
@@ -86,6 +94,8 @@ struct JsonConsAdapter
     {
         jsoncons::json_options options;
         options.indent_size (static_cast<uint8_t> (indent));
+        if constexpr (Lossless)
+            options.bigint_format (jsoncons::bigint_chars_format::number);
         std::string s;
         doc.dump_pretty (s, options);
         return s;
@@ -124,4 +134,14 @@ struct JsonConsAdapter
             return std::nullopt;
         return std::string (elem.as_string_view ());
     }
+};
+
+struct JsonConsAdapter : JsonConsBase<false>
+{
+    static constexpr std::string_view name = "jsoncons";
+};
+
+struct JsonConsLosslessAdapter : JsonConsBase<true>
+{
+    static constexpr std::string_view name = "jsoncons/lossless";
 };

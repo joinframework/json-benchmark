@@ -2,7 +2,8 @@
 
 #include <memory>
 #include <optional>
-#include <sstream>
+#include <ostream>
+#include <streambuf>
 #include <string>
 #include <string_view>
 
@@ -19,28 +20,35 @@ namespace jsoncpp_detail
         {
             case Json::objectValue:
                 stat.object_count++;
-                for (auto const& key : v.getMemberNames ())
+                for (auto it = v.begin (); it != v.end (); ++it)
                 {
+                    char const* end = nullptr;
+                    char const* begin = it.memberName (&end);
                     ++stat.member_count;
                     ++stat.string_count;
-                    stat.string_length += key.size ();
-                    gen_stat (stat, v[key]);
+                    stat.string_length += static_cast<size_t> (end - begin);
+                    gen_stat (stat, *it);
                 }
                 break;
 
             case Json::arrayValue:
                 stat.array_count++;
-                for (Json::ArrayIndex i = 0; i < v.size (); ++i)
+                for (auto const& elem : v)
                 {
                     ++stat.element_count;
-                    gen_stat (stat, v[i]);
+                    gen_stat (stat, elem);
                 }
                 break;
 
             case Json::stringValue:
-                stat.string_count++;
-                stat.string_length += v.asString ().size ();
-                break;
+                {
+                    char const* begin = nullptr;
+                    char const* end = nullptr;
+                    v.getString (&begin, &end);
+                    stat.string_count++;
+                    stat.string_length += static_cast<size_t> (end - begin);
+                    break;
+                }
 
             case Json::intValue:
             case Json::uintValue:
@@ -60,6 +68,29 @@ namespace jsoncpp_detail
                 break;
         }
     }
+
+    struct StringStreambuf : std::streambuf
+    {
+        std::string str;
+
+        explicit StringStreambuf (size_t reserve = 256)
+        {
+            str.reserve (reserve);
+        }
+
+        int_type overflow (int_type c) override
+        {
+            if (c != EOF)
+                str.push_back (static_cast<char> (c));
+            return c;
+        }
+
+        std::streamsize xsputn (const char* s, std::streamsize n) override
+        {
+            str.append (s, static_cast<size_t> (n));
+            return n;
+        }
+    };
 
 }
 
@@ -89,19 +120,28 @@ struct JsonCppAdapter
             Json::StreamWriterBuilder b;
             b["indentation"] = "";
             b["commentStyle"] = "None";
+            b["emitUTF8"] = true;
             return std::unique_ptr<Json::StreamWriter> (b.newStreamWriter ());
         }();
-        std::ostringstream oss;
-        writer->write (doc, &oss);
-        return oss.str ();
+        jsoncpp_detail::StringStreambuf buf;
+        std::ostream os (&buf);
+        writer->write (doc, &os);
+        return std::move (buf.str);
     }
 
-    static std::string prettify (const Document& doc, int indent = 4)
+    static std::string prettify (const Document& doc, int = 4)
     {
-        Json::StreamWriterBuilder builder;
-        builder["indentation"] = std::string (static_cast<size_t> (indent), ' ');
-        builder["commentStyle"] = "None";
-        return Json::writeString (builder, doc);
+        static const std::unique_ptr<Json::StreamWriter> writer = [] {
+            Json::StreamWriterBuilder b;
+            b["indentation"] = "    ";
+            b["commentStyle"] = "None";
+            b["emitUTF8"] = true;
+            return std::unique_ptr<Json::StreamWriter> (b.newStreamWriter ());
+        }();
+        jsoncpp_detail::StringStreambuf buf;
+        std::ostream os (&buf);
+        writer->write (doc, &os);
+        return std::move (buf.str);
     }
 
     static Stat statistics (const Document& doc)

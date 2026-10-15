@@ -64,87 +64,33 @@ namespace boost_detail
         }
     }
 
-    inline void pretty_write (const boost::json::value& v, std::string& out, int indent, int depth)
-    {
-        const auto pad_len   = static_cast<size_t> (depth * indent);
-        const auto inner_len = static_cast<size_t> ((depth + 1) * indent);
-
-        switch (v.kind ())
-        {
-            case boost::json::kind::object:
-                {
-                    auto& obj = v.as_object ();
-                    out += "{\n";
-                    bool first = true;
-                    for (auto& kv : obj)
-                    {
-                        if (!first)
-                            out += ",\n";
-                        out.append (inner_len, ' ');
-                        out += '"';
-                        out.append (kv.key ().data (), kv.key ().size ());
-                        out += "\": ";
-                        pretty_write (kv.value (), out, indent, depth + 1);
-                        first = false;
-                    }
-                    if (!obj.empty ())
-                        out += '\n';
-                    out.append (pad_len, ' ');
-                    out += '}';
-                    break;
-                }
-            case boost::json::kind::array:
-                {
-                    auto& arr = v.as_array ();
-                    out += "[\n";
-                    bool first = true;
-                    for (auto& elem : arr)
-                    {
-                        if (!first)
-                            out += ",\n";
-                        out.append (inner_len, ' ');
-                        pretty_write (elem, out, indent, depth + 1);
-                        first = false;
-                    }
-                    if (!arr.empty ())
-                        out += '\n';
-                    out.append (pad_len, ' ');
-                    out += ']';
-                    break;
-                }
-            default:
-                out += boost::json::serialize (v);
-                break;
-        }
-    }
-
 }
 
-struct BoostAdapter
+template <boost::json::number_precision Precision>
+struct BoostBase
 {
-    static constexpr std::string_view name = "boost";
+    static constexpr bool lossy_numbers = Precision != boost::json::number_precision::precise;
 
     using Document = boost::json::value;
 
     static std::optional<Document> parse (std::string_view json)
     {
+        static boost::json::parser parser ({}, [] {
+            boost::json::parse_options opts;
+            opts.numbers = Precision;
+            return opts;
+        }());
         boost::system::error_code ec;
-        Document doc = boost::json::parse (json, ec);
+        parser.reset ();
+        parser.write (json.data (), json.size (), ec);
         if (ec)
             return std::nullopt;
-        return doc;
+        return parser.release ();
     }
 
     static std::string stringify (const Document& doc)
     {
         return boost::json::serialize (doc);
-    }
-
-    static std::string prettify (const Document& doc, int indent = 4)
-    {
-        std::string out;
-        boost_detail::pretty_write (doc, out, indent, 0);
-        return out;
     }
 
     static Stat statistics (const Document& doc)
@@ -156,9 +102,7 @@ struct BoostAdapter
 
     static bool accepts (std::string_view json)
     {
-        boost::system::error_code ec;
-        boost::json::parse (json, ec);
-        return !ec;
+        return parse (json).has_value ();
     }
 
     static std::optional<double> parse_number (std::string_view json)
@@ -190,4 +134,14 @@ struct BoostAdapter
             return std::nullopt;
         return std::string (elem.as_string ());
     }
+};
+
+struct BoostAdapter : BoostBase<boost::json::number_precision::imprecise>
+{
+    static constexpr std::string_view name = "boost";
+};
+
+struct BoostFullPrecAdapter : BoostBase<boost::json::number_precision::precise>
+{
+    static constexpr std::string_view name = "boost/full-prec";
 };

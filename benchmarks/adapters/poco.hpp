@@ -1,7 +1,8 @@
 #pragma once
 
+#include <istream>
 #include <optional>
-#include <sstream>
+#include <ostream>
 #include <streambuf>
 #include <string>
 #include <string_view>
@@ -21,30 +22,30 @@ namespace poco_detail
     {
         if (v.type () == typeid (Poco::JSON::Object::Ptr))
         {
-            auto obj = v.extract<Poco::JSON::Object::Ptr> ();
+            const auto& obj = v.extract<Poco::JSON::Object::Ptr> ();
             stat.object_count++;
-            for (const auto& key : obj->getNames ())
+            for (const auto& [key, val] : *obj)
             {
                 ++stat.member_count;
                 ++stat.string_count;
                 stat.string_length += key.size ();
-                gen_stat (stat, obj->get (key));
+                gen_stat (stat, val);
             }
         }
         else if (v.type () == typeid (Poco::JSON::Array::Ptr))
         {
-            auto arr = v.extract<Poco::JSON::Array::Ptr> ();
+            const auto& arr = v.extract<Poco::JSON::Array::Ptr> ();
             stat.array_count++;
-            for (size_t i = 0; i < arr->size (); ++i)
+            for (const auto& elem : *arr)
             {
                 ++stat.element_count;
-                gen_stat (stat, arr->get (i));
+                gen_stat (stat, elem);
             }
         }
         else if (v.isString ())
         {
             stat.string_count++;
-            stat.string_length += v.convert<std::string> ().size ();
+            stat.string_length += v.extract<std::string> ().size ();
         }
         else if (v.isBoolean ())
         {
@@ -72,6 +73,29 @@ namespace poco_detail
         }
     };
 
+    struct StringStreambuf : std::streambuf
+    {
+        std::string str;
+
+        explicit StringStreambuf (size_t reserve = 256)
+        {
+            str.reserve (reserve);
+        }
+
+        int_type overflow (int_type c) override
+        {
+            if (c != EOF)
+                str.push_back (static_cast<char> (c));
+            return c;
+        }
+
+        std::streamsize xsputn (const char* s, std::streamsize n) override
+        {
+            str.append (s, static_cast<size_t> (n));
+            return n;
+        }
+    };
+
 }
 
 struct PocoAdapter
@@ -82,11 +106,12 @@ struct PocoAdapter
 
     static std::optional<Document> parse (std::string_view json)
     {
+        static Poco::JSON::Parser parser;
         try
         {
             poco_detail::ViewBuf buf (json.data (), json.size ());
             std::istream is (&buf);
-            Poco::JSON::Parser parser;
+            parser.reset ();
             return parser.parse (is);
         }
         catch (...)
@@ -97,16 +122,18 @@ struct PocoAdapter
 
     static std::string stringify (const Document& doc)
     {
-        std::ostringstream oss;
-        Poco::JSON::Stringifier::stringify (doc, oss);
-        return oss.str ();
+        poco_detail::StringStreambuf buf;
+        std::ostream os (&buf);
+        Poco::JSON::Stringifier::stringify (doc, os);
+        return std::move (buf.str);
     }
 
     static std::string prettify (const Document& doc, int indent = 4)
     {
-        std::ostringstream oss;
-        Poco::JSON::Stringifier::stringify (doc, oss, static_cast<unsigned int> (indent));
-        return oss.str ();
+        poco_detail::StringStreambuf buf;
+        std::ostream os (&buf);
+        Poco::JSON::Stringifier::stringify (doc, os, static_cast<unsigned int> (indent));
+        return std::move (buf.str);
     }
 
     static Stat statistics (const Document& doc)

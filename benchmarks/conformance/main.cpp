@@ -5,11 +5,15 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "adapters/boost.hpp"
+#include "adapters/cjson.hpp"
 #include "adapters/join.hpp"
 #include "adapters/jsoncons.hpp"
 #include "adapters/jsoncpp.hpp"
@@ -17,7 +21,9 @@
 #include "adapters/poco.hpp"
 #include "adapters/rapidjson.hpp"
 #include "adapters/simdjson.hpp"
+#include "adapters/sonic.hpp"
 #include "adapters/taocpp.hpp"
+#include "adapters/yyjson.hpp"
 #include "common/utils.hpp"
 
 namespace fs = std::filesystem;
@@ -204,6 +210,15 @@ void run_parse_string (Result& r, bool verbose)
     test ("[\"\\uD834\\uDD1E\"]", "\xF0\x9D\x84\x9E", 4);
 }
 
+template <typename Adapter, typename Output>
+std::string_view output_view (const Output& output)
+{
+    if constexpr (std::is_convertible_v<const Output&, std::string_view>)
+        return output;
+    else
+        return Adapter::view (output);
+}
+
 template <typename Adapter>
 void run_roundtrip (Result& r, const std::vector<std::string>& files, bool verbose)
 {
@@ -218,7 +233,8 @@ void run_roundtrip (Result& r, const std::vector<std::string>& files, bool verbo
                 std::cerr << "  [FAIL] parse error: " << fs::path (path).filename ().string () << "\n";
             continue;
         }
-        auto output = Adapter::stringify (*doc);
+        auto result = Adapter::stringify (*doc);
+        auto output = output_view<Adapter> (result);
         if (output == json)
         {
             r.roundtrip_pass++;
@@ -236,6 +252,118 @@ void run_roundtrip (Result& r, const std::vector<std::string>& files, bool verbo
     }
 }
 
+template <typename A, typename = void>
+struct has_prettify : std::false_type
+{
+};
+
+template <typename A>
+struct has_prettify<A, std::void_t<decltype (A::prettify (std::declval<const typename A::Document&> ()))>>
+: std::true_type
+{
+};
+
+template <typename A, typename = void>
+struct is_lossy : std::false_type
+{
+};
+
+template <typename A>
+struct is_lossy<A, std::void_t<decltype (A::lossy_numbers)>> : std::bool_constant<A::lossy_numbers>
+{
+};
+
+static bool same_value (yyjson_val* a, yyjson_val* b)
+{
+    if (yyjson_is_num (a) && yyjson_is_num (b))
+        return yyjson_get_num (a) == yyjson_get_num (b);
+    if (yyjson_get_type (a) != yyjson_get_type (b))
+        return false;
+    switch (yyjson_get_type (a))
+    {
+        case YYJSON_TYPE_OBJ:
+            {
+                if (yyjson_obj_size (a) != yyjson_obj_size (b))
+                    return false;
+                yyjson_obj_iter it = yyjson_obj_iter_with (a);
+                yyjson_val* key;
+                while ((key = yyjson_obj_iter_next (&it)))
+                {
+                    yyjson_val* other = yyjson_obj_getn (b, yyjson_get_str (key), yyjson_get_len (key));
+                    if (!other || !same_value (yyjson_obj_iter_get_val (key), other))
+                        return false;
+                }
+                return true;
+            }
+        case YYJSON_TYPE_ARR:
+            {
+                if (yyjson_arr_size (a) != yyjson_arr_size (b))
+                    return false;
+                yyjson_arr_iter ia = yyjson_arr_iter_with (a);
+                yyjson_arr_iter ib = yyjson_arr_iter_with (b);
+                yyjson_val* va;
+                while ((va = yyjson_arr_iter_next (&ia)))
+                {
+                    if (!same_value (va, yyjson_arr_iter_next (&ib)))
+                        return false;
+                }
+                return true;
+            }
+        case YYJSON_TYPE_STR:
+            return yyjson_get_len (a) == yyjson_get_len (b) &&
+                   std::memcmp (yyjson_get_str (a), yyjson_get_str (b), yyjson_get_len (a)) == 0;
+        default:
+            return yyjson_equals (a, b);
+    }
+}
+
+template <typename Adapter>
+bool run_output_check (const std::vector<std::string>& files, size_t first_dataset,
+                       std::vector<std::optional<Stat>>& reference)
+{
+    bool ok = true;
+    auto fail = [&] (const std::string& path, const char* what) {
+        ok = false;
+        std::cerr << "  [FAIL] " << Adapter::name << " " << what << ": " << fs::path (path).filename ().string ()
+                  << "\n";
+    };
+    for (size_t i = 0; i < files.size (); ++i)
+    {
+        auto json = load_file (files[i]);
+        auto doc = Adapter::parse (json);
+        if (!doc)
+        {
+            fail (files[i], "parse");
+            continue;
+        }
+        auto stat = Adapter::statistics (*doc);
+        if (!reference[i])
+            reference[i] = stat;
+        else if (!(stat == *reference[i]))
+            fail (files[i], "statistics");
+        YyjsonAdapter::Document input (yyjson_read (json.data (), json.size (), YYJSON_READ_NOFLAG));
+        auto check = [&] (const char* what, std::string_view output) {
+            auto reparsed = Adapter::parse (output);
+            if (!reparsed || !(Adapter::statistics (*reparsed) == stat))
+                fail (files[i], what);
+            else if constexpr (!is_lossy<Adapter>::value)
+            {
+                if (i >= first_dataset)
+                {
+                    YyjsonAdapter::Document actual (yyjson_read (output.data (), output.size (), YYJSON_READ_NOFLAG));
+                    if (!actual ||
+                        !same_value (yyjson_doc_get_root (input.get ()), yyjson_doc_get_root (actual.get ())))
+                        fail (files[i], what);
+                }
+            }
+        };
+        check ("stringify", output_view<Adapter> (Adapter::stringify (*doc)));
+        if constexpr (has_prettify<Adapter>::value)
+            check ("prettify", output_view<Adapter> (Adapter::prettify (*doc)));
+    }
+    return ok;
+}
+
 static std::vector<std::string> collect_sorted (const fs::path& dir, const std::string& prefix)
 {
     std::vector<std::string> files;
@@ -250,10 +378,10 @@ static std::vector<std::string> collect_sorted (const fs::path& dir, const std::
 
 static void print_header ()
 {
-    std::cout << std::left << std::setw (14) << "Library" << std::right << std::setw (10) << "Checker" << std::setw (12)
+    std::cout << std::left << std::setw (21) << "Library" << std::right << std::setw (10) << "Checker" << std::setw (12)
               << "Dbl Parse" << std::setw (12) << "Str Parse" << std::setw (12) << "Roundtrip"
               << "\n"
-              << std::string (60, '-') << "\n";
+              << std::string (67, '-') << "\n";
 }
 
 static void print_row (const std::string& name, const Result& r)
@@ -261,7 +389,7 @@ static void print_row (const std::string& name, const Result& r)
     auto fmt = [] (int pass, int total) {
         return std::to_string (pass) + "/" + std::to_string (total);
     };
-    std::cout << std::left << std::setw (14) << name << std::right << std::setw (10)
+    std::cout << std::left << std::setw (21) << name << std::right << std::setw (10)
               << fmt (r.checker_pass, r.checker_pass + r.checker_fail) << std::setw (12)
               << fmt (r.double_pass, r.double_pass + r.double_fail) << std::setw (12)
               << fmt (r.string_pass, r.string_pass + r.string_fail) << std::setw (12)
@@ -318,6 +446,12 @@ int main (int argc, char* argv[])
     auto pass_files = collect_sorted (checker_dir, "pass");
     auto roundtrip_files = collect_sorted (roundtrip_dir, "roundtrip");
 
+    auto check_files = pass_files;
+    for (const char* name : {"canada.json", "citm_catalog.json", "twitter.json"})
+        check_files.push_back ((data_dir / name).string ());
+    std::vector<std::optional<Stat>> reference (check_files.size ());
+    bool outputs_ok = true;
+
     std::cout << "\n=== JSON Conformance ===\n\n";
     print_header ();
 
@@ -334,13 +468,17 @@ int main (int argc, char* argv[])
         run_parse_double<Adapter> (r, verbose);
         run_parse_string<Adapter> (r, verbose);
         run_roundtrip<Adapter> (r, roundtrip_files, verbose);
+        outputs_ok &= run_output_check<Adapter> (check_files, pass_files.size (), reference);
         print_row (name, r);
         all_results.emplace_back (name, r);
     };
 
     run (BoostAdapter{});
+    run (BoostFullPrecAdapter{});
+    run (CJsonAdapter{});
     run (JoinAdapter{});
     run (JsonConsAdapter{});
+    run (JsonConsLosslessAdapter{});
     run (JsonCppAdapter{});
     run (NlohmannAdapter{});
     run (PocoAdapter{});
@@ -350,12 +488,14 @@ int main (int argc, char* argv[])
     run (RapidJsonInsituAdapter{});
     run (RapidJsonIterativeAdapter{});
     run (SimdJsonAdapter{});
+    run (SonicAdapter{});
     run (TaoCppAdapter{});
+    run (YyjsonAdapter{});
 
     std::cout << "\n";
 
     if (!output_path.empty ())
         write_json (output_path, all_results);
 
-    return 0;
+    return outputs_ok ? 0 : 1;
 }

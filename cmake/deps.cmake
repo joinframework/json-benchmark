@@ -1,5 +1,7 @@
 include(FetchContent)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     googlebenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
@@ -16,11 +18,9 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/joinframework/join.git
     GIT_TAG        main
     GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
 )
-FetchContent_GetProperties(join)
-if(NOT join_POPULATED)
-    FetchContent_Populate(join)
-endif()
+FetchContent_MakeAvailable(join)
 add_library(join_json STATIC
     ${join_SOURCE_DIR}/core/src/error.cpp
     ${join_SOURCE_DIR}/data/src/value.cpp
@@ -47,16 +47,13 @@ FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_Declare(
     rapidjson
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG        master
-    GIT_SHALLOW    TRUE
+    GIT_TAG        24b5e7a8b27f42fa16b96fc70aade9106cf7102f
+    SOURCE_SUBDIR  none
 )
-FetchContent_GetProperties(rapidjson)
-if(NOT rapidjson_POPULATED)
-    FetchContent_Populate(rapidjson)
-endif()
+FetchContent_MakeAvailable(rapidjson)
 add_library(rapidjson INTERFACE)
 add_library(rapidjson::rapidjson ALIAS rapidjson)
-target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(rapidjson SYSTEM INTERFACE ${rapidjson_SOURCE_DIR}/include)
 
 FetchContent_Declare(
     jsoncpp
@@ -74,6 +71,7 @@ FetchContent_MakeAvailable(jsoncpp)
 FetchContent_Declare(
     Boost
     URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.tar.xz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 set(BOOST_INCLUDE_LIBRARIES json)
 set(BOOST_ENABLE_CMAKE      ON)
@@ -93,28 +91,24 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/taocpp/PEGTL.git
     GIT_TAG        3.2.8
     GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
 )
-FetchContent_GetProperties(taocpp_pegtl)
-if(NOT taocpp_pegtl_POPULATED)
-    FetchContent_Populate(taocpp_pegtl)
-endif()
+FetchContent_MakeAvailable(taocpp_pegtl)
 add_library(taocpp_pegtl_iface INTERFACE)
 add_library(taocpp::pegtl ALIAS taocpp_pegtl_iface)
-target_include_directories(taocpp_pegtl_iface INTERFACE ${taocpp_pegtl_SOURCE_DIR}/include)
+target_include_directories(taocpp_pegtl_iface SYSTEM INTERFACE ${taocpp_pegtl_SOURCE_DIR}/include)
 
 FetchContent_Declare(
     taocpp_json
     GIT_REPOSITORY https://github.com/taocpp/json.git
     GIT_TAG        1.0.0-beta.14
     GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
 )
-FetchContent_GetProperties(taocpp_json)
-if(NOT taocpp_json_POPULATED)
-    FetchContent_Populate(taocpp_json)
-endif()
+FetchContent_MakeAvailable(taocpp_json)
 add_library(taocpp_json_iface INTERFACE)
 add_library(taocpp::json ALIAS taocpp_json_iface)
-target_include_directories(taocpp_json_iface INTERFACE ${taocpp_json_SOURCE_DIR}/include)
+target_include_directories(taocpp_json_iface SYSTEM INTERFACE ${taocpp_json_SOURCE_DIR}/include)
 target_link_libraries(taocpp_json_iface INTERFACE taocpp::pegtl)
 
 FetchContent_Declare(
@@ -122,14 +116,45 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/danielaparker/jsoncons.git
     GIT_TAG        v0.176.0
     GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
 )
-FetchContent_GetProperties(jsoncons)
-if(NOT jsoncons_POPULATED)
-    FetchContent_Populate(jsoncons)
-endif()
+FetchContent_MakeAvailable(jsoncons)
 add_library(jsoncons_iface INTERFACE)
 add_library(jsoncons::jsoncons ALIAS jsoncons_iface)
-target_include_directories(jsoncons_iface INTERFACE ${jsoncons_SOURCE_DIR}/include)
+target_include_directories(jsoncons_iface SYSTEM INTERFACE ${jsoncons_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    yyjson
+    GIT_REPOSITORY https://github.com/ibireme/yyjson.git
+    GIT_TAG        0.13.0
+    GIT_SHALLOW    TRUE
+)
+set(YYJSON_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(yyjson)
+
+FetchContent_Declare(
+    sonic_cpp
+    GIT_REPOSITORY https://github.com/bytedance/sonic-cpp.git
+    GIT_TAG        v1.0.2
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
+)
+FetchContent_MakeAvailable(sonic_cpp)
+add_library(sonic_iface INTERFACE)
+add_library(sonic::sonic ALIAS sonic_iface)
+target_include_directories(sonic_iface SYSTEM INTERFACE ${sonic_cpp_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    cjson
+    GIT_REPOSITORY https://github.com/DaveGamble/cJSON.git
+    GIT_TAG        v1.7.19
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
+)
+FetchContent_MakeAvailable(cjson)
+add_library(cjson STATIC ${cjson_SOURCE_DIR}/cJSON.c)
+add_library(cjson::cjson ALIAS cjson)
+target_include_directories(cjson SYSTEM PUBLIC ${cjson_SOURCE_DIR})
 
 FetchContent_Declare(
     poco
@@ -137,7 +162,6 @@ FetchContent_Declare(
     GIT_TAG        poco-1.13.3-release
     GIT_SHALLOW    TRUE
 )
-set(BUILD_SHARED_LIBS               OFF CACHE BOOL "" FORCE)
 set(ENABLE_TESTS                    OFF CACHE BOOL "" FORCE)
 set(ENABLE_SAMPLES                  OFF CACHE BOOL "" FORCE)
 set(ENABLE_ENCODINGS                OFF CACHE BOOL "" FORCE)

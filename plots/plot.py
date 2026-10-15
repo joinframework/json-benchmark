@@ -1,42 +1,52 @@
 #!/usr/bin/env python3
 
 import json
-import re
 import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+from matplotlib.colors import to_rgb
 
 
 LIBRARY_LABELS = {
-    "BoostAdapter":         "boost",
-    "JoinAdapter":          "join",
-    "JsonConsAdapter":      "jsoncons",
-    "JsonCppAdapter":       "jsoncpp",
-    "NlohmannAdapter":      "nlohmann",
-    "PocoAdapter":          "poco",
-    "RapidJsonAutoUtfAdapter":     "rapidjson/auto-utf",
-    "RapidJsonAdapter":     "rapidjson",
-    "RapidJsonFullPrecAdapter":    "rapidjson/full-prec",
-    "RapidJsonInsituAdapter":      "rapidjson/insitu",
-    "RapidJsonIterativeAdapter":   "rapidjson/iterative",
-    "SimdJsonAdapter":      "simdjson",
-    "TaoCppAdapter":        "taocpp",
+    "BoostAdapter":              "boost",
+    "BoostFullPrecAdapter":      "boost/full-prec",
+    "CJsonAdapter":              "cjson",
+    "JoinAdapter":               "join",
+    "JsonConsAdapter":           "jsoncons",
+    "JsonConsLosslessAdapter":   "jsoncons/lossless",
+    "JsonCppAdapter":            "jsoncpp",
+    "NlohmannAdapter":           "nlohmann",
+    "PocoAdapter":               "poco",
+    "RapidJsonAutoUtfAdapter":   "rapidjson/auto-utf",
+    "RapidJsonAdapter":          "rapidjson",
+    "RapidJsonFullPrecAdapter":  "rapidjson/full-prec",
+    "RapidJsonInsituAdapter":    "rapidjson/insitu",
+    "RapidJsonIterativeAdapter": "rapidjson/iterative",
+    "SimdJsonAdapter":           "simdjson",
+    "SonicAdapter":              "sonic",
+    "TaoCppAdapter":             "taocpp",
+    "YyjsonAdapter":             "yyjson",
 }
 
 LIBRARY_ORDER = list(LIBRARY_LABELS.values())
 
 DATASET_ORDER = ["Canada", "Citm", "Twitter"]
 
-_PALETTE = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-_LIB_COLORS: dict[str, str] = {}
+_PALETTE = [c for c in plt.rcParams["axes.prop_cycle"].by_key()["color"] if c != "#7f7f7f"] + ["#1b9e77", "#e6ab02", "#e7298a"]
+_LIB_COLORS: dict[str, tuple] = {}
 
-def _lib_color(name: str) -> str:
+def _lib_color(name: str) -> tuple:
     if name not in _LIB_COLORS:
-        idx = LIBRARY_ORDER.index(name) if name in LIBRARY_ORDER else len(_LIB_COLORS)
-        _LIB_COLORS[name] = _PALETTE[idx % len(_PALETTE)]
+        family   = name.split("/")[0]
+        families = list(dict.fromkeys(lib.split("/")[0] for lib in LIBRARY_ORDER))
+        idx      = families.index(family) if family in families else len(families) + len(_LIB_COLORS)
+        variants = sorted((lib for lib in LIBRARY_ORDER if lib.split("/")[0] == family), key=lambda lib: lib != family)
+        rank     = variants.index(name) if name in variants else 0
+        r, g, b  = to_rgb(_PALETTE[idx % len(_PALETTE)])
+        t        = 0.55 * rank / max(len(variants), 1)
+        _LIB_COLORS[name] = (r + (1 - r) * t, g + (1 - g) * t, b + (1 - b) * t)
     return _LIB_COLORS[name]
 
 def load_results(paths: list[str]) -> pd.DataFrame:
@@ -45,19 +55,24 @@ def load_results(paths: list[str]) -> pd.DataFrame:
         with open(path) as f:
             data = json.load(f)
         for b in data.get("benchmarks", []):
-            if b.get("run_type") != "aggregate" or b.get("aggregate_name") != "median":
+            if b.get("run_type") != "iteration" or b.get("error_occurred"):
                 continue
-            name  = re.sub(r"_(mean|median|stddev|cv)$", "", b["name"])
-            parts = name.split("/")
+            if b.get("minflt", 0) > 0.5:
+                print(f"  warning: {b['name']} ({path}): {b['minflt']:.1f} page faults per iteration", file=sys.stderr)
+            parts = b["name"].split("/")
             if len(parts) < 3:
                 continue
             rows.append({
                 "type":    parts[0],
                 "dataset": parts[1],
                 "library": LIBRARY_LABELS.get(parts[2], parts[2]),
+                "run":     path,
                 "time_ms": b.get("real_time", 0),
             })
     return pd.DataFrame(rows)
+
+def _summarise(df: pd.DataFrame) -> pd.Series:
+    return df.groupby(["library", "run"])["time_ms"].sum().groupby("library").min().sort_index(ascending=False)
 
 def _style_ax(ax: plt.Axes) -> None:
     ax.grid(axis="x", alpha=0.3, linestyle="--")
@@ -65,13 +80,15 @@ def _style_ax(ax: plt.Axes) -> None:
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-def _barh_ax(ax: plt.Axes, libs: list, values: list, title: str) -> None:
+def _barh_ax(ax: plt.Axes, summary: pd.Series, title: str) -> None:
+    libs   = summary.index.tolist()
+    values = summary.tolist()
     colors = [_lib_color(lib) for lib in libs]
     bars = ax.barh(libs, values, color=colors, alpha=0.87, height=0.65, edgecolor="white")
-    ax.bar_label(bars, fmt="%.0f", padding=4, fontsize=8)
+    ax.bar_label(bars, labels=[f"{v:.3g}" for v in values], padding=4, fontsize=8)
     ax.set_title(title, fontsize=11, fontweight="bold", loc="left", pad=6)
     ax.set_xlabel("Time (ms)")
-    ax.set_xlim(0, max(values) * 1.18 if values else 1)
+    ax.set_xlim(0, summary.max() * 1.18 if not summary.empty else 1)
     _style_ax(ax)
 
 def plot_deserialize(df: pd.DataFrame, output_dir: Path) -> None:
@@ -92,18 +109,15 @@ def plot_deserialize(df: pd.DataFrame, output_dir: Path) -> None:
     fig.suptitle("JSON Benchmark — Parse", fontsize=14, fontweight="bold")
 
     idx = 0
-    totals = parse_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-    _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), "Overall")
+    _barh_ax(axes[idx], _summarise(parse_df), "Overall")
     idx += 1
 
     for dataset in datasets:
-        sub = parse_df[parse_df["dataset"] == dataset].groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], sub.index.tolist(), sub.values.tolist(), dataset)
+        _barh_ax(axes[idx], _summarise(parse_df[parse_df["dataset"] == dataset]), dataset)
         idx += 1
 
     if has_stats:
-        totals = stats_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], totals.index.tolist(), totals.values.tolist(), "DOM Statistics")
+        _barh_ax(axes[idx], _summarise(stats_df), "DOM Statistics")
 
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out = output_dir / "performance_parse.png"
@@ -126,12 +140,10 @@ def _plot_write_bench(df: pd.DataFrame, output_dir: Path, bench_type: str, filen
         axes = [axes]
     fig.suptitle(title, fontsize=14, fontweight="bold")
 
-    totals = sub_df.groupby("library")["time_ms"].sum().sort_index(ascending=False)
-    _barh_ax(axes[0], totals.index.tolist(), totals.values.tolist(), "Overall")
+    _barh_ax(axes[0], _summarise(sub_df), "Overall")
 
     for idx, dataset in enumerate(datasets, start=1):
-        per = sub_df[sub_df["dataset"] == dataset].groupby("library")["time_ms"].sum().sort_index(ascending=False)
-        _barh_ax(axes[idx], per.index.tolist(), per.values.tolist(), dataset)
+        _barh_ax(axes[idx], _summarise(sub_df[sub_df["dataset"] == dataset]), dataset)
 
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out = output_dir / filename
@@ -142,22 +154,6 @@ def _plot_write_bench(df: pd.DataFrame, output_dir: Path, bench_type: str, filen
 def plot_serialize(df: pd.DataFrame, output_dir: Path) -> None:
     _plot_write_bench(df, output_dir, "Stringify", "performance_stringify.png", "JSON Benchmark — Stringify")
     _plot_write_bench(df, output_dir, "Prettify",  "performance_prettify.png",  "JSON Benchmark — Prettify")
-
-CONFORMANCE_LABELS = {
-    "boost":       "boost",
-    "join":        "join",
-    "jsoncons":    "jsoncons",
-    "jsoncpp":     "jsoncpp",
-    "nlohmann":    "nlohmann",
-    "poco":        "poco",
-    "AutoUTF":     "rapidjson/auto-utf",
-    "Default":     "rapidjson",
-    "FullPrec":    "rapidjson/full-prec",
-    "Insitu":      "rapidjson/insitu",
-    "Iterative":   "rapidjson/iterative",
-    "simdjson":    "simdjson",
-    "taocpp":      "taocpp",
-}
 
 _CONF_CATEGORIES = ["parse_validation", "parse_double", "parse_string", "roundtrip"]
 _CONF_CAT_LABELS = ["Parse Validation", "Parse Double", "Parse String", "Roundtrip"]
@@ -173,7 +169,7 @@ def plot_conformance(conf_path: str, output_dir: Path) -> None:
 
     rows = []
     for r in results:
-        lib = CONFORMANCE_LABELS.get(r["library"], r["library"])
+        lib = r["library"]
         total_all = sum(r[c]["total"] for c in _CONF_CATEGORIES if c in r)
         if total_all == 0:
             continue
