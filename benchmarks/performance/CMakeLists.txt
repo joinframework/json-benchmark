@@ -1,3 +1,6 @@
+# jsoncpp and POCO cache CMAKE_RUNTIME_OUTPUT_DIRECTORY to <build>/bin: keep the binaries where run_bench.sh expects them.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 function(add_json_benches library header link)
     cmake_parse_arguments(ARG "" "" "PARSE;STRINGIFY;PRETTIFY;STATISTICS" ${ARGN})
     foreach(op PARSE STRINGIFY PRETTIFY STATISTICS)

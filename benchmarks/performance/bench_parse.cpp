@@ -27,6 +27,11 @@ static void BM_Parse (benchmark::State& state, const std::string* json)
         auto doc = Adapter::parse (*json);
         benchmark::DoNotOptimize (doc);
         state.PauseTiming ();
+        if (!doc)
+        {
+            state.SkipWithError ("Parse failed");
+            break;
+        }
         doc.reset ();
         state.ResumeTiming ();
     }

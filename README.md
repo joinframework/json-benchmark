@@ -27,28 +27,28 @@ Largely inspired by [nativejson-benchmark](https://github.com/miloyip/nativejson
 
 ## Libraries
 
-| Library | Parse | Stringify | Prettify | Statistics | Conformance |
-|---------|-------|-----------|----------|------------|-------------|
-| [Boost.JSON](https://www.boost.org/doc/libs/release/libs/json/) (default) | ✓ | ✓ | — | ✓ | ✓ |
-| [Boost.JSON](https://www.boost.org/doc/libs/release/libs/json/) (full-prec) | ✓ | — | — | — | ✓ |
-| [cJSON](https://github.com/DaveGamble/cJSON) | ✓ | — | — | ✓ | ✓ |
-| [Join](https://github.com/joinframework/join) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [jsoncons](https://github.com/danielaparker/jsoncons) (default) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [jsoncons](https://github.com/danielaparker/jsoncons) (lossless) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [JsonCpp](https://github.com/open-source-parsers/jsoncpp) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [nlohmann/json](https://github.com/nlohmann/json) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [POCO JSON](https://pocoproject.org/) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [RapidJSON](https://github.com/Tencent/rapidjson) (auto-utf) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [RapidJSON](https://github.com/Tencent/rapidjson) (default) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [RapidJSON](https://github.com/Tencent/rapidjson) (full-prec) | ✓ | — | — | — | ✓ |
-| [RapidJSON](https://github.com/Tencent/rapidjson) (insitu) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [RapidJSON](https://github.com/Tencent/rapidjson) (iterative) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [simdjson](https://github.com/simdjson/simdjson) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [sonic-cpp](https://github.com/bytedance/sonic-cpp) | ✓ | ✓ | — | ✓ | ✓ |
-| [taocpp/json](https://github.com/taocpp/json) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [yyjson](https://github.com/ibireme/yyjson) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Library | Version | Parse | Stringify | Prettify | Statistics | Conformance |
+|---------|---------|-------|-----------|----------|------------|-------------|
+| [Boost.JSON](https://www.boost.org/doc/libs/release/libs/json/) (default) | 1.92.0 | ✓ | ✓ | — | ✓ | ✓ |
+| [Boost.JSON](https://www.boost.org/doc/libs/release/libs/json/) (full-prec) | 1.92.0 | ✓ | — | — | — | ✓ |
+| [cJSON](https://github.com/DaveGamble/cJSON) | 1.7.19 | ✓ | — | — | ✓ | ✓ |
+| [Join](https://github.com/joinframework/join) | `main` (bdccf5b) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [jsoncons](https://github.com/danielaparker/jsoncons) (default) | 1.10.0 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [jsoncons](https://github.com/danielaparker/jsoncons) (lossless) | 1.10.0 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [JsonCpp](https://github.com/open-source-parsers/jsoncpp) | 1.9.8 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [POCO JSON](https://pocoproject.org/) | 1.15.4 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [RapidJSON](https://github.com/Tencent/rapidjson) (auto-utf) | `master` (297637b) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [RapidJSON](https://github.com/Tencent/rapidjson) (default) | `master` (297637b) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [RapidJSON](https://github.com/Tencent/rapidjson) (full-prec) | `master` (297637b) | ✓ | — | — | — | ✓ |
+| [RapidJSON](https://github.com/Tencent/rapidjson) (insitu) | `master` (297637b) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [RapidJSON](https://github.com/Tencent/rapidjson) (iterative) | `master` (297637b) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [simdjson](https://github.com/simdjson/simdjson) | 5.1.1 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [sonic-cpp](https://github.com/bytedance/sonic-cpp) | 1.0.2 | ✓ | ✓ | — | ✓ | ✓ |
+| [taocpp/json](https://github.com/taocpp/json) | 1.0.0-beta.14 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [yyjson](https://github.com/ibireme/yyjson) | 0.13.0 | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-All dependencies are fetched automatically via CMake FetchContent.
+All dependencies are fetched automatically via CMake FetchContent, pinned to their latest release (Join and RapidJSON, which have no recent release, are taken from their main branch; taocpp/json uses PEGTL 3.2.9).
 
 Prettify only measures native indentation support. **Boost.JSON** and **sonic-cpp** have none and are excluded from it; **simdjson** serialises with its native `simdjson::to_string` and `simdjson::prettify`. **sonic-cpp** requires x86-64 with AVX2.
 
@@ -64,7 +64,7 @@ Boost.JSON is benchmarked in two configurations to isolate the impact of its num
 
 jsoncons is benchmarked in two configurations:
 - **default** — numbers converted to `int64`/`double` at parse time
-- **lossless** — `lossless_number(true)`, decimal numbers kept as their original text (tagged `bigdec`) and written back verbatim (`bigint_chars_format::number`)
+- **lossless** — `lossless_number(true)`, decimal numbers kept as their original text (tagged `bigdec`) and written back verbatim (`bignum_format_kind::number`)
 
 RapidJSON is benchmarked in five configurations to isolate the impact of its parser options:
 - **default** — standard UTF-8, fast float parsing
@@ -72,6 +72,8 @@ RapidJSON is benchmarked in five configurations to isolate the impact of its par
 - **iterative** — `kParseIterativeFlag`, stack-allocated iterative descent (no system stack recursion)
 - **insitu** — `kParseInsituFlag`, in-place string unescaping directly in the source buffer
 - **auto-utf** — `AutoUTFInputStream`, auto-detect UTF-8/16/32 encoding
+
+RapidJSON only uses its SIMD code paths (whitespace skipping, string scanning and escaping) when `RAPIDJSON_SSE42`, `RAPIDJSON_SSE2` or `RAPIDJSON_NEON` is defined. CMake checks which of them `-march=native` enables on the build machine and defines the best one, so RapidJSON gets the same access to the CPU as the libraries that detect SIMD by themselves (Boost.JSON, simdjson, sonic-cpp, yyjson).
 
 The full-prec variants only change number parsing, so they are measured in parse and conformance only.
 
@@ -163,7 +165,7 @@ PNGs are written to `plots/`:
 
 **Goal**: time to parse a JSON document into an in-memory DOM.
 
-The benchmark calls `Adapter::parse(json)` and measures only the parsing time. DOM destruction is excluded from timing (`PauseTiming` / `ResumeTiming`): some libraries free memory as a single pool (`RapidJSON`), others free each array, object and string individually (`nlohmann`, `Join`). Excluding destruction matches nativejson-benchmark's convention and isolates the parsing cost.
+The benchmark calls `Adapter::parse(json)` and measures only the parsing time. DOM destruction is excluded from timing (`PauseTiming` / `ResumeTiming`): some libraries free memory as a single pool (`RapidJSON`, `Join`, `yyjson`), others free each array, object and string individually (`nlohmann`, `JsonCpp`). Excluding destruction matches nativejson-benchmark's convention and isolates the parsing cost. A parse failure stops the benchmark with an error instead of timing the failure path.
 
 **What is measured**: tokenisation, UTF-8 validation, number parsing, and DOM construction.
 
@@ -226,7 +228,8 @@ In addition, an **output check** guards the performance benchmarks: on each data
 - A reusable parser object is kept across iterations when the library's API provides one (simdjson `dom::parser`, Boost.JSON `parser`, JsonCpp `CharReader`, POCO `Parser`); the DOM itself is always built fresh and destroyed outside the timed region.
 - Every compiled library is linked statically: `BUILD_SHARED_LIBS` is forced off before the first dependency is declared. Set any later, a fresh configure built Boost.JSON, simdjson, yyjson and JsonCpp as shared libraries, which slowed Boost.JSON statistics by 30%.
 - Every library runs with its default allocator (Boost.JSON with plain `new`/`delete` rather than a `monotonic_resource`, yyjson without a pool, RapidJSON with its built-in `MemoryPoolAllocator`); no adapter installs a custom one.
-- Stringify and prettify return each library's native output buffer (`std::string`, RapidJSON `StringBuffer`, sonic `WriteBuffer`, yyjson's `malloc`ed block) without converting it, so no library pays an extra copy.
+- Stringify and prettify return each library's native output buffer (`std::string`, RapidJSON `StringBuffer`, sonic `WriteBuffer`, yyjson's `malloc`ed block) without converting it, so no library pays an extra copy. Join, JsonCpp and POCO only write to a `std::ostream`: all three write into the same stream buffer (`common/streambuf.hpp`, a `realloc`-grown block), so none gets a faster sink than the others.
+- Statistics walk each DOM through its plain containers (nlohmann's `object_t`/`array_t` rather than the `items()` proxy), the way each library's own documentation iterates them.
 - Result JSONs are gitignored (`results/`); plots are committed under `plots/`.
 
 ## Test machine
@@ -239,11 +242,11 @@ All figures below come from a single run on this machine (3 repetitions, each in
 | Frequency | 3700 MHz, `performance` governor, boost disabled |
 | Caches | L1d 8 × 32 KiB, L2 8 × 512 KiB, L3 2 × 8 MiB |
 | RAM | 16 GiB |
-| OS | Ubuntu 26.04.1 LTS, kernel 7.0.0-38-generic |
+| OS | Ubuntu 26.04.1 LTS, kernel 7.0.0-42-generic |
 | Toolchain | GCC 15.2.0, CMake 4.2.3 |
-| Compile flags | `-O3 -DNDEBUG -march=native -std=c++17` |
+| Compile flags | `-O3 -DNDEBUG -march=native -std=c++17` (`-std=c++20` for Join, which requires it); `RAPIDJSON_SSE42` |
 | Pinning | `taskset -c 2` (physical core, SMT sibling 10) |
-| Conditions | idle machine, 3 repetitions, run started once the CPU was back to its rated clock; spread across repetitions below 2% for 111 of 186 benchmarks and below 5% for 142; outliers are one Join parse process on `canada.json` (30% slower than the others) and jsoncons stringify/prettify (up to 38%) |
+| Conditions | idle machine, 3 repetitions, run started once the CPU was back to its rated clock (3701 MHz); spread across repetitions below 2% for 148 of 186 benchmarks and below 5% for 166; outliers are jsoncons stringify/prettify (up to 49%, and about 1 page fault per iteration on `canada.json` prettify) and simdjson parse on `citm_catalog.json` (12%) |
 
 ## Results
 
@@ -257,23 +260,23 @@ Measured on a development machine. Re-run `scripts/run_bench.sh` to reproduce on
 
 ![Prettify](plots/performance_prettify.png)
 
-**Parse**: **sonic-cpp** (3.85 ms) and **simdjson** (4.00 ms) lead, with **yyjson** (4.66 ms) close behind; all three are SIMD-based. Among the other DOM libraries, **RapidJSON** in-situ (7.15 ms) leads thanks to its zero-copy string handling, followed by the default variant (7.89 ms), **Boost.JSON** (8.56 ms) and **RapidJSON** iterative (9.45 ms). **Join** (11.6 ms) and **Boost.JSON** `full-prec` (11.7 ms) follow. Full-precision number parsing costs **Boost.JSON** +37% (8.56 → 11.7 ms) but **RapidJSON** +100% (7.89 → 15.8 ms), almost entirely on the float-heavy `canada.json`. **RapidJSON** auto-utf (17.7 ms) pays for encoding detection. **taocpp/json** (25.4 ms) and **cJSON** (34.8 ms, slow on `canada.json` floats) follow. **jsoncons** is faster in `lossless` mode (36.5 ms against 51.0 ms), since it keeps numbers as text instead of converting them; **nlohmann/json** (51.9 ms) sits alongside the default mode. **POCO** (102 ms) and **JsonCpp** (112 ms) trail significantly.
+**Parse**: **simdjson** (3.75 ms) and **sonic-cpp** (3.79 ms) lead, both SIMD-based, with **yyjson** (4.65 ms) close behind without explicit SIMD. **Join** (6.23 ms), whose DOM is allocated from a bump allocator, leads the other DOM libraries, ahead of **RapidJSON** in-situ (6.79 ms), which benefits from its zero-copy string handling, and its default variant (7.31 ms). **RapidJSON** iterative (8.33 ms) and **Boost.JSON** (8.86 ms) follow. Full-precision number parsing costs **Boost.JSON** +32% (8.86 → 11.7 ms) but **RapidJSON** +108% (7.31 → 15.2 ms), almost entirely on the float-heavy `canada.json`. **RapidJSON** auto-utf (18.3 ms) pays for encoding detection. **taocpp/json** (25.5 ms) comes next, then **jsoncons** (28.7 ms `lossless`, 29.5 ms default; `lossless` keeps numbers as text instead of converting them) and **cJSON** (35.2 ms, slow on `canada.json` floats). **nlohmann/json** (52.0 ms) is slower; **POCO** (103 ms) and **JsonCpp** (122 ms) trail significantly.
 
-**Stringify**: **yyjson** leads at 3.81 ms, followed by **sonic-cpp** (5.41 ms), **Boost.JSON** (7.63 ms) and **jsoncons** `lossless` (8.25 ms), which writes its numbers back verbatim. **Join** (10.1 ms) comes next, ahead of **simdjson** (10.8 ms), the **RapidJSON** variants (11.4–11.6 ms), **taocpp/json** (12.1 ms) and **nlohmann/json** (12.8 ms). **jsoncons** in its default mode (21.7 ms) is slower; **POCO** (45 ms) and **JsonCpp** (84.9 ms) are the slowest.
+**Stringify**: **yyjson** leads at 3.78 ms, followed by **sonic-cpp** (5.52 ms), **simdjson** (5.96 ms), **Join** (6.12 ms), **Boost.JSON** (7.56 ms) and **jsoncons** `lossless` (7.75 ms), which writes its numbers back verbatim. The **RapidJSON** variants (10.7–10.8 ms), **taocpp/json** (12.0 ms) and **nlohmann/json** (13.3 ms) come next. **jsoncons** in its default mode (17.5 ms) is slower; **POCO** (47.0 ms) and **JsonCpp** (83.2 ms) are the slowest.
 
-**Prettify**: **yyjson** leads by a wide margin at 4.81 ms. The **RapidJSON** variants (12.6–12.7 ms) and **Join** (13.6 ms) follow, then **nlohmann/json** (17.9 ms) and **taocpp/json** (18.4 ms). **simdjson** (30.4 ms) is slower, as are **jsoncons** (45 ms `lossless`, 58 ms default). **JsonCpp** (92 ms) and **POCO** (119 ms) trail by a wide margin.
+**Prettify**: **yyjson** leads by a wide margin at 4.85 ms, followed by **Join** (8.04 ms) and **simdjson** (9.13 ms). The **RapidJSON** variants (12.5–12.7 ms) come next, then **taocpp/json** (18.5 ms) and **nlohmann/json** (18.7 ms). **jsoncons** is slower (44 ms `lossless`, 56 ms default). **JsonCpp** (88.9 ms) and **POCO** (127 ms) trail by a wide margin.
 
-**Statistics**: **sonic-cpp** leads at 0.58 ms, with **Join** (0.62 ms) right behind. The **RapidJSON** variants (0.68–0.73 ms), whose contiguous memory pool keeps the DOM cache-friendly, follow, along with **jsoncons** (0.74 ms) and **yyjson** (0.78 ms). **Boost.JSON** (0.87 ms), **simdjson** (0.91 ms) and **taocpp/json** (0.93 ms) come next, then **nlohmann/json** (1.31 ms), **jsoncons** `lossless` (1.32 ms; its numbers stay text, which slows `canada.json`) and **cJSON** (1.62 ms). **JsonCpp** (4.9 ms) and **POCO** (5.3 ms) remain the outliers.
+**Statistics**: **Join** leads at 0.56 ms, with **sonic-cpp** (0.58 ms) right behind. The **RapidJSON** variants (0.71 ms), whose contiguous memory pool keeps the DOM cache-friendly, follow, then **yyjson** (0.78 ms) and **Boost.JSON** (0.87 ms). **taocpp/json** (0.92 ms), **nlohmann/json** (0.93 ms), **simdjson** (0.93 ms) and **jsoncons** (0.95 ms) are grouped, ahead of **jsoncons** `lossless` (1.46 ms; its numbers stay text, which slows `canada.json`) and **cJSON** (1.62 ms). **JsonCpp** (5.4 ms) and **POCO** (5.4 ms) remain the outliers.
 
-Raw throughput is only part of the picture. A parser that silently accepts malformed input, produces slightly wrong floating-point values, or mangles escape sequences can introduce subtle bugs that are hard to reproduce and trace. The conformance suite measures what matters in production: does the library correctly reject invalid JSON, parse numbers to the right `double`, decode strings exactly as the spec requires, and reproduce the original representation on roundtrip?
+The conformance suite checks whether each library rejects invalid JSON, parses numbers to the correctly rounded `double`, decodes strings exactly as the spec requires, and reproduces the original representation on roundtrip.
 
 ### Conformance
 
 ![Conformance](plots/conformance.png)
 
-**Parse Validation**: most libraries pass all 34 cases. **JsonCpp** fails 8 (it is lenient on some constructs that the JSON spec rejects, such as comments). **cJSON** fails 6: its native `cJSON_ParseWithLength` ignores content after the value (3 cases), and it accepts a leading zero (`013`) and raw tab or line-break characters inside strings.
+**Parse Validation**: most libraries pass all 34 cases. **JsonCpp** fails 6: it accepts trailing commas, content after the closing bracket and a leading zero (`013`). **cJSON** fails 6: its native `cJSON_ParseWithLength` ignores content after the value (3 cases), and it accepts a leading zero (`013`) and raw tab or line-break characters inside strings.
 
-**Parse Double**: the sharpest differentiator. **Join**, **jsoncons** (both modes), **JsonCpp**, **nlohmann/json**, **taocpp/json**, **yyjson**, **cJSON**, and the `full-prec` modes of **RapidJSON** and **Boost.JSON** achieve perfect precision (66/66). **sonic-cpp** misses 2, both mantissas longer than 19 digits followed by an exponent. **POCO** and **simdjson** pass 57/66: the 9 misses are all integers beyond 64 bits written without a fraction or exponent, which POCO rejects and simdjson's DOM reports as `BIGINT_ERROR`; their floating-point parsing is exact. **RapidJSON**'s default, iterative, insitu, and auto-utf modes fail 18 cases and **Boost.JSON**'s default mode fails 12 — both trade precision for speed using a fast-path float parser, and their `full-prec` modes close the gap.
+**Parse Double**: the sharpest differentiator. **Join**, **JsonCpp**, **nlohmann/json**, **taocpp/json**, **yyjson**, **cJSON**, and the `full-prec` modes of **RapidJSON** and **Boost.JSON** achieve perfect precision (66/66). **sonic-cpp** misses 2, both mantissas longer than 19 digits followed by an exponent. **jsoncons** (both modes) misses 3: a number that underflows a `double` (`1e-10000`, `1e-214748363`, `1e-214748364`, or simply `1e-400`) is parsed as `+inf` instead of `0`. **POCO** and **simdjson** pass 57/66: the 9 misses are all integers beyond 64 bits written without a fraction or exponent, which POCO rejects and simdjson's DOM reports as `BIGINT_ERROR` (simdjson 5 can keep them as text, but only with a non-default parser option); their floating-point parsing is exact. **RapidJSON**'s default, iterative, insitu, and auto-utf modes fail 18 cases and **Boost.JSON**'s default mode fails 12 — both trade precision for speed using a fast-path float parser, and their `full-prec` modes close the gap.
 
 **Parse String**: all libraries pass all 9 cases except **cJSON** (8/9), whose strings stop at the first `\u0000`.
 
@@ -283,19 +286,20 @@ The output check also caught a writer bug in **taocpp/json** that the roundtrip 
 
 ### Conclusion
 
-The best libraries are those that are both fast and correct. Several stand out on both axes:
+Summary per library, with the limitations measured or documented for each:
 
-- **yyjson** is the strongest library overall: perfect conformance (136/136), the fastest stringify (3.81 ms) and prettify (4.81 ms) by a wide margin, and a parse (4.66 ms) within 25% of the SIMD leaders.
-- **sonic-cpp** has the fastest parse (3.85 ms) and leads statistics (0.58 ms), with a fast stringify (5.41 ms). It has no indented output, misses 2 double-precision cases (132/136), and needs AVX2.
-- **simdjson** parses at 4.00 ms with exact floating-point parsing, but rejects integers beyond 64 bits (126/136) and its DOM is read-only: it can serialise a parsed document, more slowly (10.8 ms minified, 30.4 ms pretty), but not modify it.
-- **RapidJSON** remains a fast general-purpose DOM: `insitu` (7.15 ms) and `default` (7.89 ms) parse, ~0.7 ms statistics, ~12.6 ms prettify. `full-prec` doubles the parse cost (15.8 ms) and reaches perfect conformance (136/136); the other modes give up 18 double-precision cases.
-- **Join** achieves perfect conformance (136/136) with balanced performance: second in statistics (0.62 ms), close to RapidJSON in prettify (13.6 ms), mid-pack in stringify (10.1 ms) and parse (11.6 ms).
-- **Boost.JSON** has a fast default parser (8.56 ms) and stringify (7.63 ms). `full-prec` fixes double parsing (66/66) for +37% parse time, a cheaper precision upgrade than RapidJSON's, but its roundtrip score (19/27) remains a concern if exact decimal reproduction of floats matters.
-- **taocpp/json** reaches perfect conformance (136/136) with competitive serialisation (stringify 12.1 ms, prettify 18.4 ms) and a 25.4 ms parse, but has a writer bug on some small exponents (see Conformance).
-- **nlohmann/json** offers perfect double precision and near-perfect roundtrip (26/27) in a widely used, ergonomic API, at the cost of parse throughput (52 ms).
-- **jsoncons** reaches 134/136 by default and 136/136 in `lossless` mode, which is also faster to parse (37 ms) and stringify (8.2 ms) but slower on numeric statistics.
-- **cJSON** is small and portable, but lenient on invalid input (28/34) with lossy float output and a 34.8 ms parse.
-- **JsonCpp** and **POCO** are consistently the slowest in every performance category and offer no conformance advantage. They are best avoided in performance-sensitive code.
+- **yyjson**: perfect conformance (136/136), fastest stringify (3.78 ms) and prettify (4.85 ms), parse 4.65 ms. Limitations: C API with manual lifetime management; a parsed document is immutable, and modifying it requires a copy into a separate mutable document (`yyjson_mut_doc`) with its own API; statistics 0.78 ms, behind Join, sonic-cpp and RapidJSON.
+- **sonic-cpp**: parse 3.79 ms, statistics 0.58 ms (2nd), stringify 5.52 ms. Limitations: x86-64 with AVX2 only; no indented output; 132/136 (2 double-precision cases, 2 roundtrips).
+- **simdjson**: fastest parse (3.75 ms) with exact floating-point parsing; stringify 5.96 ms, prettify 9.13 ms. Limitations: read-only DOM; integers beyond 64 bits rejected by default (126/136); requires a padded input buffer (a copy, included in the timed region); 12% spread across processes on `citm_catalog.json` parse.
+- **Join**: perfect conformance (136/136); statistics 0.56 ms (1st), prettify 8.04 ms (2nd), parse 6.23 ms and stringify 6.12 ms (4th). Limitations: requires C++20; output only through `std::ostream`; parse about 1.7× slower than simdjson and sonic-cpp, stringify 1.6× slower than yyjson.
+- **RapidJSON**: parse 6.79 ms (`insitu`) and 7.31 ms (`default`), statistics 0.71 ms, prettify ~12.5 ms. Limitations: the default, iterative, insitu and auto-utf modes miss 18 double-precision cases; `full-prec` (136/136) doubles the parse time (15.2 ms); SIMD paths only when enabled at compile time; no release since 1.1.0 (2016), built from `master`.
+- **Boost.JSON**: parse 8.86 ms, stringify 7.56 ms. Limitations: the default mode misses 12 double-precision cases, and `full-prec` (66/66) adds 32% parse time; the serialiser does not reproduce the input's float representation (19/27 roundtrip in both modes); no indented output.
+- **taocpp/json**: perfect conformance (136/136); stringify 12.0 ms, prettify 18.5 ms. Limitations: parse 25.5 ms, 5–7× the leaders; writer bug on some small exponents (see Conformance); depends on PEGTL; versioned as a beta (1.0.0-beta.14).
+- **nlohmann/json**: perfect double precision, 26/27 roundtrip. Limitations: parse 52 ms, about 14× the leaders; the default `json` type stores objects in a `std::map`, so members are written back sorted by key rather than in input order (`ordered_json` keeps the order).
+- **jsoncons**: parse about 29 ms in both modes; `lossless` writes numbers back verbatim, with a 7.75 ms stringify. Limitations: underflowing numbers are parsed as `+inf` (131/136 default, 133/136 `lossless`); prettify 44–56 ms; serialisation timings vary by up to 49% across processes; `lossless` nearly doubles the statistics time on `canada.json` (1.14 ms against 0.63 ms).
+- **cJSON**: single C source file; parse 35.2 ms. Limitations: accepts invalid input (28/34); approximate float output; strings stop at the first `\u0000`; excluded from stringify and prettify.
+- **JsonCpp**: exact doubles (66/66); accepts comments by default. Limitations: slowest stringify (83.2 ms) and parse (122 ms), statistics 5.4 ms; accepts trailing commas, trailing content and leading zeros (28/34).
+- **POCO JSON**: 34/34 validation, exact floating-point parsing. Limitations: slowest prettify (127 ms) and statistics (5.4 ms), parse 103 ms; integers beyond 64 bits rejected (57/66 doubles).
 
 ## License
 

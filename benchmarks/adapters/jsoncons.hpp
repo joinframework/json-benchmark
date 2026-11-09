@@ -82,7 +82,7 @@ struct JsonConsBase
         if constexpr (Lossless)
         {
             jsoncons::json_options options;
-            options.bigint_format (jsoncons::bigint_chars_format::number);
+            options.bignum_format (jsoncons::bignum_format_kind::number);
             doc.dump (s, options);
         }
         else
@@ -95,7 +95,7 @@ struct JsonConsBase
         jsoncons::json_options options;
         options.indent_size (static_cast<uint8_t> (indent));
         if constexpr (Lossless)
-            options.bigint_format (jsoncons::bigint_chars_format::number);
+            options.bignum_format (jsoncons::bignum_format_kind::number);
         std::string s;
         doc.dump_pretty (s, options);
         return s;

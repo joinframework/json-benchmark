@@ -5,7 +5,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     googlebenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG        v1.8.4
+    GIT_TAG        v1.10.0
     GIT_SHALLOW    TRUE
 )
 set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "" FORCE)
@@ -23,8 +23,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(join)
 add_library(join_json STATIC
     ${join_SOURCE_DIR}/core/src/error.cpp
-    ${join_SOURCE_DIR}/data/src/value.cpp
-    ${join_SOURCE_DIR}/data/src/sax.cpp
+    ${join_SOURCE_DIR}/data/src/sax_error.cpp
     ${join_SOURCE_DIR}/data/src/json.cpp
 )
 add_library(join::json ALIAS join_json)
@@ -32,12 +31,22 @@ target_include_directories(join_json PUBLIC
     ${join_SOURCE_DIR}/core/include
     ${join_SOURCE_DIR}/data/include
 )
-target_compile_features(join_json PUBLIC cxx_std_14)
+target_compile_features(join_json PUBLIC cxx_std_20)
+
+FetchContent_Declare(
+    dconv
+    GIT_REPOSITORY https://github.com/joinframework/dconv.git
+    GIT_TAG        v1.2.1
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  none
+)
+FetchContent_MakeAvailable(dconv)
+target_include_directories(join_json PUBLIC ${dconv_SOURCE_DIR}/dconv/include)
 
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG        v3.11.3
+    GIT_TAG        v3.12.0
     GIT_SHALLOW    TRUE
 )
 set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
@@ -47,7 +56,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_Declare(
     rapidjson
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG        24b5e7a8b27f42fa16b96fc70aade9106cf7102f
+    GIT_TAG        297637bc0a0f00dc504dbc1a47ebdaa577f8ae19
     SOURCE_SUBDIR  none
 )
 FetchContent_MakeAvailable(rapidjson)
@@ -55,10 +64,25 @@ add_library(rapidjson INTERFACE)
 add_library(rapidjson::rapidjson ALIAS rapidjson)
 target_include_directories(rapidjson SYSTEM INTERFACE ${rapidjson_SOURCE_DIR}/include)
 
+# RapidJSON only uses SIMD when told to: enable the best instruction set -march=native provides.
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS -march=native)
+check_cxx_source_compiles("#ifndef __SSE4_2__\n#error\n#endif\nint main () {}" JSON_BENCH_HAS_SSE42)
+check_cxx_source_compiles("#ifndef __SSE2__\n#error\n#endif\nint main () {}" JSON_BENCH_HAS_SSE2)
+check_cxx_source_compiles("#ifndef __ARM_NEON\n#error\n#endif\nint main () {}" JSON_BENCH_HAS_NEON)
+unset(CMAKE_REQUIRED_FLAGS)
+if(JSON_BENCH_HAS_SSE42)
+    target_compile_definitions(rapidjson INTERFACE RAPIDJSON_SSE42)
+elseif(JSON_BENCH_HAS_SSE2)
+    target_compile_definitions(rapidjson INTERFACE RAPIDJSON_SSE2)
+elseif(JSON_BENCH_HAS_NEON)
+    target_compile_definitions(rapidjson INTERFACE RAPIDJSON_NEON)
+endif()
+
 FetchContent_Declare(
     jsoncpp
     GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
-    GIT_TAG        1.9.6
+    GIT_TAG        1.9.8
     GIT_SHALLOW    TRUE
 )
 set(JSONCPP_WITH_TESTS               OFF CACHE BOOL "" FORCE)
@@ -70,7 +94,7 @@ FetchContent_MakeAvailable(jsoncpp)
 
 FetchContent_Declare(
     Boost
-    URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.tar.xz
+    URL https://github.com/boostorg/boost/releases/download/boost-1.92.0/boost-1.92.0-cmake.tar.xz
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 set(BOOST_INCLUDE_LIBRARIES json)
@@ -80,7 +104,7 @@ FetchContent_MakeAvailable(Boost)
 FetchContent_Declare(
     simdjson
     GIT_REPOSITORY https://github.com/simdjson/simdjson.git
-    GIT_TAG        v3.10.0
+    GIT_TAG        v5.1.1
     GIT_SHALLOW    TRUE
 )
 set(SIMDJSON_BUILD_STATIC_LIB ON CACHE BOOL "" FORCE)
@@ -89,7 +113,7 @@ FetchContent_MakeAvailable(simdjson)
 FetchContent_Declare(
     taocpp_pegtl
     GIT_REPOSITORY https://github.com/taocpp/PEGTL.git
-    GIT_TAG        3.2.8
+    GIT_TAG        3.2.9
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
@@ -114,7 +138,7 @@ target_link_libraries(taocpp_json_iface INTERFACE taocpp::pegtl)
 FetchContent_Declare(
     jsoncons
     GIT_REPOSITORY https://github.com/danielaparker/jsoncons.git
-    GIT_TAG        v0.176.0
+    GIT_TAG        v1.10.0
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
@@ -159,7 +183,7 @@ target_include_directories(cjson SYSTEM PUBLIC ${cjson_SOURCE_DIR})
 FetchContent_Declare(
     poco
     GIT_REPOSITORY https://github.com/pocoproject/poco.git
-    GIT_TAG        poco-1.13.3-release
+    GIT_TAG        poco-1.15.4-release
     GIT_SHALLOW    TRUE
 )
 set(ENABLE_TESTS                    OFF CACHE BOOL "" FORCE)
