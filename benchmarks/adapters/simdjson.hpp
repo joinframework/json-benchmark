@@ -49,6 +49,7 @@ namespace simdjson_detail
             case simdjson::dom::element_type::INT64:
             case simdjson::dom::element_type::UINT64:
             case simdjson::dom::element_type::DOUBLE:
+            case simdjson::dom::element_type::BIGINT:
                 ++stat.number_count;
                 break;
             case simdjson::dom::element_type::BOOL:

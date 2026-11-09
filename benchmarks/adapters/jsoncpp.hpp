@@ -3,12 +3,12 @@
 #include <memory>
 #include <optional>
 #include <ostream>
-#include <streambuf>
 #include <string>
 #include <string_view>
 
 #include <json/json.h>
 
+#include "common/streambuf.hpp"
 #include "common/stat.hpp"
 
 namespace jsoncpp_detail
@@ -69,29 +69,6 @@ namespace jsoncpp_detail
         }
     }
 
-    struct StringStreambuf : std::streambuf
-    {
-        std::string str;
-
-        explicit StringStreambuf (size_t reserve = 256)
-        {
-            str.reserve (reserve);
-        }
-
-        int_type overflow (int_type c) override
-        {
-            if (c != EOF)
-                str.push_back (static_cast<char> (c));
-            return c;
-        }
-
-        std::streamsize xsputn (const char* s, std::streamsize n) override
-        {
-            str.append (s, static_cast<size_t> (n));
-            return n;
-        }
-    };
-
 }
 
 struct JsonCppAdapter
@@ -114,7 +91,7 @@ struct JsonCppAdapter
         return doc;
     }
 
-    static std::string stringify (const Document& doc)
+    static StreamOutput stringify (const Document& doc)
     {
         static const std::unique_ptr<Json::StreamWriter> writer = [] {
             Json::StreamWriterBuilder b;
@@ -123,13 +100,13 @@ struct JsonCppAdapter
             b["emitUTF8"] = true;
             return std::unique_ptr<Json::StreamWriter> (b.newStreamWriter ());
         }();
-        jsoncpp_detail::StringStreambuf buf;
+        OutputStreambuf buf;
         std::ostream os (&buf);
         writer->write (doc, &os);
-        return std::move (buf.str);
+        return std::move (buf.out);
     }
 
-    static std::string prettify (const Document& doc, int = 4)
+    static StreamOutput prettify (const Document& doc, int = 4)
     {
         static const std::unique_ptr<Json::StreamWriter> writer = [] {
             Json::StreamWriterBuilder b;
@@ -138,10 +115,15 @@ struct JsonCppAdapter
             b["emitUTF8"] = true;
             return std::unique_ptr<Json::StreamWriter> (b.newStreamWriter ());
         }();
-        jsoncpp_detail::StringStreambuf buf;
+        OutputStreambuf buf;
         std::ostream os (&buf);
         writer->write (doc, &os);
-        return std::move (buf.str);
+        return std::move (buf.out);
+    }
+
+    static std::string_view view (const StreamOutput& out)
+    {
+        return out.view ();
     }
 
     static Stat statistics (const Document& doc)

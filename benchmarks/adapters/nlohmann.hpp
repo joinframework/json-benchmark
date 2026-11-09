@@ -17,7 +17,7 @@ namespace nlohmann_detail
         {
             case nlohmann::json::value_t::object:
                 stat.object_count++;
-                for (auto& [key, val] : v.items ())
+                for (auto& [key, val] : v.get_ref<const nlohmann::json::object_t&> ())
                 {
                     ++stat.member_count;
                     ++stat.string_count;
@@ -28,7 +28,7 @@ namespace nlohmann_detail
 
             case nlohmann::json::value_t::array:
                 stat.array_count++;
-                for (auto& elem : v)
+                for (auto& elem : v.get_ref<const nlohmann::json::array_t&> ())
                 {
                     ++stat.element_count;
                     gen_stat (stat, elem);

@@ -13,6 +13,7 @@
 #include <Poco/JSON/Parser.h>
 #include <Poco/JSON/Stringifier.h>
 
+#include "common/streambuf.hpp"
 #include "common/stat.hpp"
 
 namespace poco_detail
@@ -73,29 +74,6 @@ namespace poco_detail
         }
     };
 
-    struct StringStreambuf : std::streambuf
-    {
-        std::string str;
-
-        explicit StringStreambuf (size_t reserve = 256)
-        {
-            str.reserve (reserve);
-        }
-
-        int_type overflow (int_type c) override
-        {
-            if (c != EOF)
-                str.push_back (static_cast<char> (c));
-            return c;
-        }
-
-        std::streamsize xsputn (const char* s, std::streamsize n) override
-        {
-            str.append (s, static_cast<size_t> (n));
-            return n;
-        }
-    };
-
 }
 
 struct PocoAdapter
@@ -120,20 +98,25 @@ struct PocoAdapter
         }
     }
 
-    static std::string stringify (const Document& doc)
+    static StreamOutput stringify (const Document& doc)
     {
-        poco_detail::StringStreambuf buf;
+        OutputStreambuf buf;
         std::ostream os (&buf);
         Poco::JSON::Stringifier::stringify (doc, os);
-        return std::move (buf.str);
+        return std::move (buf.out);
     }
 
-    static std::string prettify (const Document& doc, int indent = 4)
+    static StreamOutput prettify (const Document& doc, int indent = 4)
     {
-        poco_detail::StringStreambuf buf;
+        OutputStreambuf buf;
         std::ostream os (&buf);
         Poco::JSON::Stringifier::stringify (doc, os, static_cast<unsigned int> (indent));
-        return std::move (buf.str);
+        return std::move (buf.out);
+    }
+
+    static std::string_view view (const StreamOutput& out)
+    {
+        return out.view ();
     }
 
     static Stat statistics (const Document& doc)
