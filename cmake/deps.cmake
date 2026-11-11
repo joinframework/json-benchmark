@@ -36,7 +36,7 @@ target_compile_features(join_json PUBLIC cxx_std_20)
 FetchContent_Declare(
     dconv
     GIT_REPOSITORY https://github.com/joinframework/dconv.git
-    GIT_TAG        v1.2.1
+    GIT_TAG        v1.2.2
     GIT_SHALLOW    TRUE
     SOURCE_SUBDIR  none
 )
