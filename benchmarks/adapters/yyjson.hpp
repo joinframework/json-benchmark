@@ -12,7 +12,6 @@
 
 namespace yyjson_detail
 {
-
     struct DocDeleter
     {
         void operator() (yyjson_doc* doc) const noexcept
@@ -21,7 +20,7 @@ namespace yyjson_detail
         }
     };
 
-    inline void gen_stat (Stat& stat, yyjson_val* v)
+    STAT_WALK inline void gen_stat (Stat& stat, yyjson_val* v)
     {
         switch (yyjson_get_type (v))
         {
@@ -62,9 +61,13 @@ namespace yyjson_detail
 
             case YYJSON_TYPE_BOOL:
                 if (yyjson_get_bool (v))
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case YYJSON_TYPE_NULL:
@@ -96,7 +99,6 @@ namespace yyjson_detail
         out.json.reset (yyjson_write (doc, flags, &out.size));
         return out;
     }
-
 }
 
 struct YyjsonAdapter
@@ -109,7 +111,9 @@ struct YyjsonAdapter
     {
         Document doc (yyjson_read (json.data (), json.size (), YYJSON_READ_NOFLAG));
         if (!doc)
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -144,10 +148,14 @@ struct YyjsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         yyjson_val* elem = yyjson_arr_get_first (yyjson_doc_get_root (doc->get ()));
         if (!yyjson_is_num (elem))
+        {
             return std::nullopt;
+        }
         return yyjson_get_num (elem);
     }
 
@@ -155,10 +163,14 @@ struct YyjsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         yyjson_val* elem = yyjson_arr_get_first (yyjson_doc_get_root (doc->get ()));
         if (!yyjson_is_str (elem))
+        {
             return std::nullopt;
+        }
         return std::string (yyjson_get_str (elem), yyjson_get_len (elem));
     }
 };

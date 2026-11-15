@@ -10,51 +10,60 @@
 
 namespace jsoncons_detail
 {
-
-    inline void gen_stat (Stat& stat, const jsoncons::json& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const jsoncons::json& v)
     {
-        if (v.is_object ())
+        switch (v.type ())
         {
-            stat.object_count++;
-            for (auto& kv : v.object_range ())
-            {
-                ++stat.member_count;
-                ++stat.string_count;
-                stat.string_length += kv.key ().size ();
-                gen_stat (stat, kv.value ());
-            }
-        }
-        else if (v.is_array ())
-        {
-            stat.array_count++;
-            for (auto& elem : v.array_range ())
-            {
-                ++stat.element_count;
-                gen_stat (stat, elem);
-            }
-        }
-        else if (v.is_number ())
-        {
-            stat.number_count++;
-        }
-        else if (v.is_string ())
-        {
-            stat.string_count++;
-            stat.string_length += v.as_string_view ().size ();
-        }
-        else if (v.is_bool ())
-        {
-            if (v.as<bool> ())
-                stat.true_count++;
-            else
-                stat.false_count++;
-        }
-        else if (v.is_null ())
-        {
-            stat.null_count++;
+            case jsoncons::json_type::object:
+                stat.object_count++;
+                for (auto& kv : v.object_range ())
+                {
+                    ++stat.member_count;
+                    ++stat.string_count;
+                    stat.string_length += kv.key ().size ();
+                    gen_stat (stat, kv.value ());
+                }
+                break;
+            case jsoncons::json_type::array:
+                stat.array_count++;
+                for (auto& elem : v.array_range ())
+                {
+                    ++stat.element_count;
+                    gen_stat (stat, elem);
+                }
+                break;
+            case jsoncons::json_type::string:
+                if (v.is_number ())
+                {
+                    stat.number_count++;
+                    break;
+                }
+                stat.string_count++;
+                stat.string_length += v.as_string_view ().size ();
+                break;
+            case jsoncons::json_type::int64:
+            case jsoncons::json_type::uint64:
+            case jsoncons::json_type::float16:
+            case jsoncons::json_type::float64:
+                stat.number_count++;
+                break;
+            case jsoncons::json_type::boolean:
+                if (v.as<bool> ())
+                {
+                    stat.true_count++;
+                }
+                else
+                {
+                    stat.false_count++;
+                }
+                break;
+            case jsoncons::json_type::null:
+                stat.null_count++;
+                break;
+            default:
+                break;
         }
     }
-
 }
 
 template <bool Lossless>
@@ -86,7 +95,9 @@ struct JsonConsBase
             doc.dump (s, options);
         }
         else
+        {
             doc.dump (s);
+        }
         return s;
     }
 
@@ -95,7 +106,9 @@ struct JsonConsBase
         jsoncons::json_options options;
         options.indent_size (static_cast<uint8_t> (indent));
         if constexpr (Lossless)
+        {
             options.bignum_format (jsoncons::bignum_format_kind::number);
+        }
         std::string s;
         doc.dump_pretty (s, options);
         return s;
@@ -117,10 +130,14 @@ struct JsonConsBase
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->empty ())
+        {
             return std::nullopt;
+        }
         const auto& elem = (*doc)[0];
         if (!elem.is_number ())
+        {
             return std::nullopt;
+        }
         return elem.as<double> ();
     }
 
@@ -128,10 +145,14 @@ struct JsonConsBase
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->empty ())
+        {
             return std::nullopt;
+        }
         const auto& elem = (*doc)[0];
         if (!elem.is_string ())
+        {
             return std::nullopt;
+        }
         return std::string (elem.as_string_view ());
     }
 };

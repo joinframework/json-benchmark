@@ -10,45 +10,53 @@
 
 namespace sonic_detail
 {
-
     template <typename Node>
-    inline void gen_stat (Stat& stat, const Node& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const Node& v)
     {
-        if (v.IsObject ())
+        switch (v.GetType ())
         {
-            stat.object_count++;
-            for (auto it = v.MemberBegin (); it != v.MemberEnd (); ++it)
-            {
-                ++stat.member_count;
-                ++stat.string_count;
-                stat.string_length += it->name.Size ();
-                gen_stat (stat, it->value);
-            }
+            case sonic_json::kObject:
+                stat.object_count++;
+                for (auto it = v.MemberBegin (); it != v.MemberEnd (); ++it)
+                {
+                    ++stat.member_count;
+                    ++stat.string_count;
+                    stat.string_length += it->name.Size ();
+                    gen_stat (stat, it->value);
+                }
+                break;
+            case sonic_json::kArray:
+                stat.array_count++;
+                for (auto it = v.Begin (); it != v.End (); ++it)
+                {
+                    ++stat.element_count;
+                    gen_stat (stat, *it);
+                }
+                break;
+            case sonic_json::kStringCopy:
+            case sonic_json::kStringFree:
+            case sonic_json::kStringConst:
+                stat.string_count++;
+                stat.string_length += v.Size ();
+                break;
+            case sonic_json::kUint:
+            case sonic_json::kSint:
+            case sonic_json::kReal:
+                stat.number_count++;
+                break;
+            case sonic_json::kTrue:
+                stat.true_count++;
+                break;
+            case sonic_json::kFalse:
+                stat.false_count++;
+                break;
+            case sonic_json::kNull:
+                stat.null_count++;
+                break;
+            default:
+                break;
         }
-        else if (v.IsArray ())
-        {
-            stat.array_count++;
-            for (auto it = v.Begin (); it != v.End (); ++it)
-            {
-                ++stat.element_count;
-                gen_stat (stat, *it);
-            }
-        }
-        else if (v.IsString ())
-        {
-            stat.string_count++;
-            stat.string_length += v.Size ();
-        }
-        else if (v.IsNumber ())
-            stat.number_count++;
-        else if (v.IsTrue ())
-            stat.true_count++;
-        else if (v.IsFalse ())
-            stat.false_count++;
-        else if (v.IsNull ())
-            stat.null_count++;
     }
-
 }
 
 struct SonicAdapter
@@ -62,7 +70,9 @@ struct SonicAdapter
         Document doc;
         doc.Parse (json.data (), json.size ());
         if (doc.HasParseError ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -94,7 +104,9 @@ struct SonicAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Empty () || !(*doc)[0].IsNumber ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].GetDouble ();
     }
 
@@ -102,7 +114,9 @@ struct SonicAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Empty () || !(*doc)[0].IsString ())
+        {
             return std::nullopt;
+        }
         auto sv = (*doc)[0].GetStringView ();
         return std::string (sv.data (), sv.size ());
     }

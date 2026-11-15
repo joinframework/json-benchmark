@@ -16,8 +16,7 @@
 
 namespace rapidjson_detail
 {
-
-    inline void gen_stat (Stat& stat, const rapidjson::Value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const rapidjson::Value& v)
     {
         switch (v.GetType ())
         {
@@ -77,7 +76,6 @@ namespace rapidjson_detail
         v.Accept (writer);
         return sb;
     }
-
 }
 
 template <unsigned Flags>
@@ -92,7 +90,9 @@ struct RapidJsonCopyBase
         Document doc;
         doc.Parse<Flags> (json.data (), json.size ());
         if (doc.HasParseError ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -120,16 +120,16 @@ struct RapidJsonCopyBase
 
     static bool accepts (std::string_view json)
     {
-        Document doc;
-        doc.Parse<Flags> (json.data (), json.size ());
-        return !doc.HasParseError ();
+        return parse (json).has_value ();
     }
 
     static std::optional<double> parse_number (std::string_view json)
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Size () < 1 || !(*doc)[0].IsNumber ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].GetDouble ();
     }
 
@@ -137,7 +137,9 @@ struct RapidJsonCopyBase
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Size () < 1 || !(*doc)[0].IsString ())
+        {
             return std::nullopt;
+        }
         return std::string ((*doc)[0].GetString (), (*doc)[0].GetStringLength ());
     }
 };
@@ -166,7 +168,9 @@ struct RapidJsonInsituBase
         result.buf.push_back ('\0');
         result.doc.template ParseInsitu<ExtraFlags> (result.buf.data ());
         if (result.doc.HasParseError ())
+        {
             return std::nullopt;
+        }
         return result;
     }
 
@@ -194,18 +198,16 @@ struct RapidJsonInsituBase
 
     static bool accepts (std::string_view json)
     {
-        std::vector<char> buf (json.begin (), json.end ());
-        buf.push_back ('\0');
-        rapidjson::Document doc;
-        doc.template ParseInsitu<ExtraFlags> (buf.data ());
-        return !doc.HasParseError ();
+        return parse (json).has_value ();
     }
 
     static std::optional<double> parse_number (std::string_view json)
     {
         auto d = parse (json);
         if (!d || !d->doc.IsArray () || d->doc.Size () < 1 || !d->doc[0].IsNumber ())
+        {
             return std::nullopt;
+        }
         return d->doc[0].GetDouble ();
     }
 
@@ -213,7 +215,9 @@ struct RapidJsonInsituBase
     {
         auto d = parse (json);
         if (!d || !d->doc.IsArray () || d->doc.Size () < 1 || !d->doc[0].IsString ())
+        {
             return std::nullopt;
+        }
         return std::string (d->doc[0].GetString (), d->doc[0].GetStringLength ());
     }
 };
@@ -251,7 +255,9 @@ struct RapidJsonAutoUtfAdapter
         rapidjson::AutoUTFInputStream<unsigned, rapidjson::MemoryStream> eis (ms);
         doc.ParseStream<rapidjson::kParseDefaultFlags, rapidjson::AutoUTF<unsigned>> (eis);
         if (doc.HasParseError ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -279,18 +285,16 @@ struct RapidJsonAutoUtfAdapter
 
     static bool accepts (std::string_view json)
     {
-        Document doc;
-        rapidjson::MemoryStream ms (json.data (), json.size ());
-        rapidjson::AutoUTFInputStream<unsigned, rapidjson::MemoryStream> eis (ms);
-        doc.ParseStream<rapidjson::kParseDefaultFlags, rapidjson::AutoUTF<unsigned>> (eis);
-        return !doc.HasParseError ();
+        return parse (json).has_value ();
     }
 
     static std::optional<double> parse_number (std::string_view json)
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Size () < 1 || !(*doc)[0].IsNumber ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].GetDouble ();
     }
 
@@ -298,7 +302,9 @@ struct RapidJsonAutoUtfAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->IsArray () || doc->Size () < 1 || !(*doc)[0].IsString ())
+        {
             return std::nullopt;
+        }
         return std::string ((*doc)[0].GetString (), (*doc)[0].GetStringLength ());
     }
 };

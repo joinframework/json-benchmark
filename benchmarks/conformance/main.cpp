@@ -49,12 +49,16 @@ void run_checker (Result& r, const std::vector<std::string>& fail_files, const s
         auto json = load_file (path);
         bool accepted = Adapter::accepts (json);
         if (!accepted)
+        {
             r.checker_pass++;
+        }
         else
         {
             r.checker_fail++;
             if (verbose)
+            {
                 std::cerr << "  [FAIL] should reject: " << fs::path (path).filename ().string () << "\n";
+            }
         }
     }
     for (auto& path : pass_files)
@@ -62,12 +66,16 @@ void run_checker (Result& r, const std::vector<std::string>& fail_files, const s
         auto json = load_file (path);
         bool accepted = Adapter::accepts (json);
         if (accepted)
+        {
             r.checker_pass++;
+        }
         else
         {
             r.checker_fail++;
             if (verbose)
+            {
                 std::cerr << "  [FAIL] should accept: " << fs::path (path).filename ().string () << "\n";
+            }
         }
     }
 }
@@ -87,12 +95,16 @@ void run_parse_double (Result& r, bool verbose)
         auto val = Adapter::parse_number (json);
         bool ok = val && doubles_bitwise_eq (*val, expected);
         if (ok)
+        {
             r.double_pass++;
+        }
         else
         {
             r.double_fail++;
             if (verbose)
+            {
                 std::cerr << "  [FAIL] parse_double: " << json << "\n";
+            }
         }
     };
 
@@ -165,7 +177,9 @@ void run_parse_double (Result& r, bool verbose)
     n1e308[0] = '[';
     n1e308[1] = '1';
     for (int j = 2; j < 310; j++)
+    {
         n1e308[j] = '0';
+    }
     n1e308[310] = ']';
     n1e308[311] = '\0';
     test (n1e308, 1E308);
@@ -190,12 +204,16 @@ void run_parse_string (Result& r, bool verbose)
         auto val = Adapter::parse_string (json);
         bool ok = val && val->size () == expected_len && std::memcmp (val->data (), expected, expected_len) == 0;
         if (ok)
+        {
             r.string_pass++;
+        }
         else
         {
             r.string_fail++;
             if (verbose)
+            {
                 std::cerr << "  [FAIL] parse_string: " << json << "\n";
+            }
         }
     };
 
@@ -214,9 +232,13 @@ template <typename Adapter, typename Output>
 std::string_view output_view (const Output& output)
 {
     if constexpr (std::is_convertible_v<const Output&, std::string_view>)
+    {
         return output;
+    }
     else
+    {
         return Adapter::view (output);
+    }
 }
 
 template <typename Adapter>
@@ -230,7 +252,9 @@ void run_roundtrip (Result& r, const std::vector<std::string>& files, bool verbo
         {
             r.roundtrip_fail++;
             if (verbose)
+            {
                 std::cerr << "  [FAIL] parse error: " << fs::path (path).filename ().string () << "\n";
+            }
             continue;
         }
         auto result = Adapter::stringify (*doc);
@@ -276,36 +300,48 @@ struct is_lossy<A, std::void_t<decltype (A::lossy_numbers)>> : std::bool_constan
 static bool same_value (yyjson_val* a, yyjson_val* b)
 {
     if (yyjson_is_num (a) && yyjson_is_num (b))
+    {
         return yyjson_get_num (a) == yyjson_get_num (b);
+    }
     if (yyjson_get_type (a) != yyjson_get_type (b))
+    {
         return false;
+    }
     switch (yyjson_get_type (a))
     {
         case YYJSON_TYPE_OBJ:
             {
                 if (yyjson_obj_size (a) != yyjson_obj_size (b))
+                {
                     return false;
+                }
                 yyjson_obj_iter it = yyjson_obj_iter_with (a);
                 yyjson_val* key;
                 while ((key = yyjson_obj_iter_next (&it)))
                 {
                     yyjson_val* other = yyjson_obj_getn (b, yyjson_get_str (key), yyjson_get_len (key));
                     if (!other || !same_value (yyjson_obj_iter_get_val (key), other))
+                    {
                         return false;
+                    }
                 }
                 return true;
             }
         case YYJSON_TYPE_ARR:
             {
                 if (yyjson_arr_size (a) != yyjson_arr_size (b))
+                {
                     return false;
+                }
                 yyjson_arr_iter ia = yyjson_arr_iter_with (a);
                 yyjson_arr_iter ib = yyjson_arr_iter_with (b);
                 yyjson_val* va;
                 while ((va = yyjson_arr_iter_next (&ia)))
                 {
                     if (!same_value (va, yyjson_arr_iter_next (&ib)))
+                    {
                         return false;
+                    }
                 }
                 return true;
             }
@@ -338,14 +374,20 @@ bool run_output_check (const std::vector<std::string>& files, size_t first_datas
         }
         auto stat = Adapter::statistics (*doc);
         if (!reference[i])
+        {
             reference[i] = stat;
+        }
         else if (!(stat == *reference[i]))
+        {
             fail (files[i], "statistics");
+        }
         YyjsonAdapter::Document input (yyjson_read (json.data (), json.size (), YYJSON_READ_NOFLAG));
         auto check = [&] (const char* what, std::string_view output) {
             auto reparsed = Adapter::parse (output);
             if (!reparsed || !(Adapter::statistics (*reparsed) == stat))
+            {
                 fail (files[i], what);
+            }
             else if constexpr (!is_lossy<Adapter>::value)
             {
                 if (i >= first_dataset)
@@ -353,13 +395,17 @@ bool run_output_check (const std::vector<std::string>& files, size_t first_datas
                     YyjsonAdapter::Document actual (yyjson_read (output.data (), output.size (), YYJSON_READ_NOFLAG));
                     if (!actual ||
                         !same_value (yyjson_doc_get_root (input.get ()), yyjson_doc_get_root (actual.get ())))
+                    {
                         fail (files[i], what);
+                    }
                 }
             }
         };
         check ("stringify", output_view<Adapter> (Adapter::stringify (*doc)));
         if constexpr (has_prettify<Adapter>::value)
+        {
             check ("prettify", output_view<Adapter> (Adapter::prettify (*doc)));
+        }
     }
     return ok;
 }
@@ -370,7 +416,9 @@ static std::vector<std::string> collect_sorted (const fs::path& dir, const std::
     for (auto& entry : fs::directory_iterator (dir))
     {
         if (entry.path ().extension () == ".json" && entry.path ().filename ().string ().rfind (prefix, 0) == 0)
+        {
             files.push_back (entry.path ().string ());
+        }
     }
     std::sort (files.begin (), files.end ());
     return files;
@@ -418,7 +466,9 @@ static void write_json (const std::string& output_path, const std::vector<std::p
         out << "\n";
         out << "    }";
         if (i + 1 < all.size ())
+        {
             out << ",";
+        }
         out << "\n";
     }
     out << "  ]\n}\n";
@@ -433,9 +483,13 @@ int main (int argc, char* argv[])
     {
         std::string arg (argv[i]);
         if (arg == "-v")
+        {
             verbose = true;
+        }
         else if (arg == "--output" && i + 1 < argc)
+        {
             output_path = argv[++i];
+        }
     }
 
     const fs::path data_dir = DATA_DIR;
@@ -448,7 +502,9 @@ int main (int argc, char* argv[])
 
     auto check_files = pass_files;
     for (const char* name : {"canada.json", "citm_catalog.json", "twitter.json"})
+    {
         check_files.push_back ((data_dir / name).string ());
+    }
     std::vector<std::optional<Stat>> reference (check_files.size ());
     bool outputs_ok = true;
 
@@ -461,7 +517,9 @@ int main (int argc, char* argv[])
         using Adapter = decltype (adapter);
         std::string name{Adapter::name};
         if (verbose)
+        {
             std::cout << "\n[" << name << "]\n";
+        }
 
         Result r;
         run_checker<Adapter> (r, fail_files, pass_files, verbose);
@@ -477,6 +535,7 @@ int main (int argc, char* argv[])
     run (BoostFullPrecAdapter{});
     run (CJsonAdapter{});
     run (JoinAdapter{});
+    run (JoinZeroCopyAdapter{});
     run (JsonConsAdapter{});
     run (JsonConsLosslessAdapter{});
     run (JsonCppAdapter{});
@@ -495,7 +554,9 @@ int main (int argc, char* argv[])
     std::cout << "\n";
 
     if (!output_path.empty ())
+    {
         write_json (output_path, all_results);
+    }
 
     return outputs_ok ? 0 : 1;
 }

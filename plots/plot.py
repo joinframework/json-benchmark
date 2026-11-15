@@ -14,6 +14,7 @@ LIBRARY_LABELS = {
     "BoostFullPrecAdapter":      "boost/full-prec",
     "CJsonAdapter":              "cjson",
     "JoinAdapter":               "join",
+    "JoinZeroCopyAdapter":       "join/zero-copy",
     "JsonConsAdapter":           "jsoncons",
     "JsonConsLosslessAdapter":   "jsoncons/lossless",
     "JsonCppAdapter":            "jsoncpp",
@@ -35,6 +36,10 @@ LIBRARY_ORDER = list(LIBRARY_LABELS.values())
 DATASET_ORDER = ["Canada", "Citm", "Twitter"]
 
 _PALETTE = [c for c in plt.rcParams["axes.prop_cycle"].by_key()["color"] if c != "#7f7f7f"] + ["#1b9e77", "#e6ab02", "#e7298a"]
+_FAMILY_COLORS = {
+    "boost": "#2ca02c",
+    "join":  "#1f77b4",
+}
 _LIB_COLORS: dict[str, tuple] = {}
 
 def _lib_color(name: str) -> tuple:
@@ -44,7 +49,7 @@ def _lib_color(name: str) -> tuple:
         idx      = families.index(family) if family in families else len(families) + len(_LIB_COLORS)
         variants = sorted((lib for lib in LIBRARY_ORDER if lib.split("/")[0] == family), key=lambda lib: lib != family)
         rank     = variants.index(name) if name in variants else 0
-        r, g, b  = to_rgb(_PALETTE[idx % len(_PALETTE)])
+        r, g, b  = to_rgb(_FAMILY_COLORS.get(family, _PALETTE[idx % len(_PALETTE)]))
         t        = 0.55 * rank / max(len(variants), 1)
         _LIB_COLORS[name] = (r + (1 - r) * t, g + (1 - g) * t, b + (1 - b) * t)
     return _LIB_COLORS[name]
@@ -106,7 +111,7 @@ def plot_deserialize(df: pd.DataFrame, output_dir: Path) -> None:
     fig, axes = plt.subplots(n_subs, 1, figsize=(10, row_h * n_subs))
     if n_subs == 1:
         axes = [axes]
-    fig.suptitle("JSON Benchmark — Parse", fontsize=14, fontweight="bold")
+    fig.suptitle("JSON Benchmark: Parse", fontsize=14, fontweight="bold")
 
     idx = 0
     _barh_ax(axes[idx], _summarise(parse_df), "Overall")
@@ -152,8 +157,8 @@ def _plot_write_bench(df: pd.DataFrame, output_dir: Path, bench_type: str, filen
     plt.close(fig)
 
 def plot_serialize(df: pd.DataFrame, output_dir: Path) -> None:
-    _plot_write_bench(df, output_dir, "Stringify", "performance_stringify.png", "JSON Benchmark — Stringify")
-    _plot_write_bench(df, output_dir, "Prettify",  "performance_prettify.png",  "JSON Benchmark — Prettify")
+    _plot_write_bench(df, output_dir, "Stringify", "performance_stringify.png", "JSON Benchmark: Stringify")
+    _plot_write_bench(df, output_dir, "Prettify",  "performance_prettify.png",  "JSON Benchmark: Prettify")
 
 _CONF_CATEGORIES = ["parse_validation", "parse_double", "parse_string", "roundtrip"]
 _CONF_CAT_LABELS = ["Parse Validation", "Parse Double", "Parse String", "Roundtrip"]
@@ -192,7 +197,7 @@ def plot_conformance(conf_path: str, output_dir: Path) -> None:
 
     fig, axes = plt.subplots(len(all_keys), 1,
                              figsize=(10, row_h * len(all_keys)))
-    fig.suptitle("JSON Benchmark — Conformance", fontsize=14, fontweight="bold")
+    fig.suptitle("JSON Benchmark: Conformance", fontsize=14, fontweight="bold")
 
     for ax, c, label in zip(axes, all_keys, all_labels):
         libs   = [r["library"] for r in rows]
