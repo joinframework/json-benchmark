@@ -10,8 +10,7 @@
 
 namespace simdjson_detail
 {
-
-    inline void gen_stat (Stat& stat, simdjson::dom::element e)
+    STAT_WALK inline void gen_stat (Stat& stat, simdjson::dom::element e)
     {
         switch (e.type ())
         {
@@ -54,16 +53,19 @@ namespace simdjson_detail
                 break;
             case simdjson::dom::element_type::BOOL:
                 if (e.get_bool ().value ())
+                {
                     ++stat.true_count;
+                }
                 else
+                {
                     ++stat.false_count;
+                }
                 break;
             case simdjson::dom::element_type::NULL_VALUE:
                 ++stat.null_count;
                 break;
         }
     }
-
 }
 
 struct SimdJsonAdapter
@@ -78,7 +80,9 @@ struct SimdJsonAdapter
         simdjson::padded_string padded (json.data (), json.size ());
         Document doc;
         if (parser.parse_into_document (doc, padded).error () != simdjson::SUCCESS)
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -108,23 +112,35 @@ struct SimdJsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         simdjson::dom::array arr;
         if (doc->root ().get (arr) != simdjson::SUCCESS)
+        {
             return std::nullopt;
+        }
         auto it = arr.begin ();
         if (it == arr.end ())
+        {
             return std::nullopt;
+        }
         simdjson::dom::element first = *it;
         double d;
         if (first.get (d) == simdjson::SUCCESS)
+        {
             return d;
+        }
         int64_t i;
         if (first.get (i) == simdjson::SUCCESS)
+        {
             return static_cast<double> (i);
+        }
         uint64_t u;
         if (first.get (u) == simdjson::SUCCESS)
+        {
             return static_cast<double> (u);
+        }
         return std::nullopt;
     }
 
@@ -132,16 +148,24 @@ struct SimdJsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         simdjson::dom::array arr;
         if (doc->root ().get (arr) != simdjson::SUCCESS)
+        {
             return std::nullopt;
+        }
         auto it = arr.begin ();
         if (it == arr.end ())
+        {
             return std::nullopt;
+        }
         std::string_view sv;
         if ((*it).get (sv) != simdjson::SUCCESS)
+        {
             return std::nullopt;
+        }
         return std::string (sv);
     }
 };

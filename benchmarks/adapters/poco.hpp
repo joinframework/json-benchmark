@@ -18,14 +18,12 @@
 
 namespace poco_detail
 {
-
-    inline void gen_stat (Stat& stat, const Poco::Dynamic::Var& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const Poco::Dynamic::Var& v)
     {
         if (v.type () == typeid (Poco::JSON::Object::Ptr))
         {
-            const auto& obj = v.extract<Poco::JSON::Object::Ptr> ();
             stat.object_count++;
-            for (const auto& [key, val] : *obj)
+            for (const auto& [key, val] : *v.extract<Poco::JSON::Object::Ptr> ())
             {
                 ++stat.member_count;
                 ++stat.string_count;
@@ -35,9 +33,8 @@ namespace poco_detail
         }
         else if (v.type () == typeid (Poco::JSON::Array::Ptr))
         {
-            const auto& arr = v.extract<Poco::JSON::Array::Ptr> ();
             stat.array_count++;
-            for (const auto& elem : *arr)
+            for (const auto& elem : *v.extract<Poco::JSON::Array::Ptr> ())
             {
                 ++stat.element_count;
                 gen_stat (stat, elem);
@@ -48,18 +45,22 @@ namespace poco_detail
             stat.string_count++;
             stat.string_length += v.extract<std::string> ().size ();
         }
-        else if (v.isBoolean ())
-        {
-            if (v.extract<bool> ())
-                stat.true_count++;
-            else
-                stat.false_count++;
-        }
-        else if (v.isNumeric ())
+        else if (v.isNumeric () && !v.isBoolean ())
         {
             stat.number_count++;
         }
-        else
+        else if (v.isBoolean ())
+        {
+            if (v.extract<bool> ())
+            {
+                stat.true_count++;
+            }
+            else
+            {
+                stat.false_count++;
+            }
+        }
+        else if (v.isEmpty ())
         {
             stat.null_count++;
         }
@@ -73,7 +74,6 @@ namespace poco_detail
             setg (pp, pp, pp + n);
         }
     };
-
 }
 
 struct PocoAdapter
@@ -135,12 +135,16 @@ struct PocoAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         try
         {
             auto arr = doc->extract<Poco::JSON::Array::Ptr> ();
             if (!arr || arr->size () == 0)
+            {
                 return std::nullopt;
+            }
             return arr->getElement<double> (0);
         }
         catch (...)
@@ -153,12 +157,16 @@ struct PocoAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         try
         {
             auto arr = doc->extract<Poco::JSON::Array::Ptr> ();
             if (!arr || arr->size () == 0)
+            {
                 return std::nullopt;
+            }
             return arr->getElement<std::string> (0);
         }
         catch (...)

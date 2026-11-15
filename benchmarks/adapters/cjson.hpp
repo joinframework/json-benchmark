@@ -12,7 +12,6 @@
 
 namespace cjson_detail
 {
-
     struct Deleter
     {
         void operator() (cJSON* item) const noexcept
@@ -21,41 +20,47 @@ namespace cjson_detail
         }
     };
 
-    inline void gen_stat (Stat& stat, const cJSON* v)
+    STAT_WALK inline void gen_stat (Stat& stat, const cJSON* v)
     {
-        if (cJSON_IsObject (v))
+        switch (v->type & 0xFF)
         {
-            stat.object_count++;
-            for (const cJSON* child = v->child; child; child = child->next)
-            {
-                ++stat.member_count;
-                ++stat.string_count;
-                stat.string_length += std::strlen (child->string);
-                gen_stat (stat, child);
-            }
+            case cJSON_Object:
+                stat.object_count++;
+                for (const cJSON* child = v->child; child; child = child->next)
+                {
+                    ++stat.member_count;
+                    ++stat.string_count;
+                    stat.string_length += std::strlen (child->string);
+                    gen_stat (stat, child);
+                }
+                break;
+            case cJSON_Array:
+                stat.array_count++;
+                for (const cJSON* child = v->child; child; child = child->next)
+                {
+                    ++stat.element_count;
+                    gen_stat (stat, child);
+                }
+                break;
+            case cJSON_String:
+                stat.string_count++;
+                stat.string_length += std::strlen (v->valuestring);
+                break;
+            case cJSON_Number:
+                stat.number_count++;
+                break;
+            case cJSON_True:
+                stat.true_count++;
+                break;
+            case cJSON_False:
+                stat.false_count++;
+                break;
+            case cJSON_NULL:
+                stat.null_count++;
+                break;
+            default:
+                break;
         }
-        else if (cJSON_IsArray (v))
-        {
-            stat.array_count++;
-            for (const cJSON* child = v->child; child; child = child->next)
-            {
-                ++stat.element_count;
-                gen_stat (stat, child);
-            }
-        }
-        else if (cJSON_IsString (v))
-        {
-            stat.string_count++;
-            stat.string_length += std::strlen (v->valuestring);
-        }
-        else if (cJSON_IsNumber (v))
-            stat.number_count++;
-        else if (cJSON_IsTrue (v))
-            stat.true_count++;
-        else if (cJSON_IsFalse (v))
-            stat.false_count++;
-        else if (cJSON_IsNull (v))
-            stat.null_count++;
     }
 
     struct FreeDeleter
@@ -65,7 +70,6 @@ namespace cjson_detail
             cJSON_free (json);
         }
     };
-
 }
 
 struct CJsonAdapter
@@ -78,7 +82,9 @@ struct CJsonAdapter
     {
         Document doc (cJSON_ParseWithLength (json.data (), json.size ()));
         if (!doc)
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -112,10 +118,14 @@ struct CJsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         const cJSON* elem = cJSON_GetArrayItem (doc->get (), 0);
         if (!cJSON_IsNumber (elem))
+        {
             return std::nullopt;
+        }
         return elem->valuedouble;
     }
 
@@ -123,10 +133,14 @@ struct CJsonAdapter
     {
         auto doc = parse (json);
         if (!doc)
+        {
             return std::nullopt;
+        }
         const cJSON* elem = cJSON_GetArrayItem (doc->get (), 0);
         if (!cJSON_IsString (elem))
+        {
             return std::nullopt;
+        }
         return std::string (elem->valuestring);
     }
 };

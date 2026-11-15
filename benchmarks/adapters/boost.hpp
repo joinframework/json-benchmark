@@ -11,8 +11,7 @@
 
 namespace boost_detail
 {
-
-    inline void gen_stat (Stat& stat, const boost::json::value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const boost::json::value& v)
     {
         switch (v.kind ())
         {
@@ -53,9 +52,13 @@ namespace boost_detail
 
             case boost::json::kind::bool_:
                 if (v.as_bool ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case boost::json::kind::null:
@@ -63,7 +66,6 @@ namespace boost_detail
                 break;
         }
     }
-
 }
 
 template <boost::json::number_precision Precision>
@@ -84,7 +86,9 @@ struct BoostBase
         parser.reset ();
         parser.write (json.data (), json.size (), ec);
         if (ec)
+        {
             return std::nullopt;
+        }
         return parser.release ();
     }
 
@@ -109,7 +113,9 @@ struct BoostBase
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->as_array ().empty ())
+        {
             return std::nullopt;
+        }
         const auto& elem = doc->as_array ()[0];
         switch (elem.kind ())
         {
@@ -128,10 +134,14 @@ struct BoostBase
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->as_array ().empty ())
+        {
             return std::nullopt;
+        }
         const auto& elem = doc->as_array ()[0];
         if (elem.kind () != boost::json::kind::string)
+        {
             return std::nullopt;
+        }
         return std::string (elem.as_string ());
     }
 };

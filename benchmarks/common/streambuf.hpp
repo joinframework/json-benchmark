@@ -42,11 +42,15 @@ struct OutputStreambuf : std::streambuf
     void grow (size_t n)
     {
         if (out.size + n <= capacity)
+        {
             return;
+        }
         size_t cap = std::max (capacity + (capacity + 1) / 2, out.size + n);
         char* data = static_cast<char*> (std::realloc (out.data.get (), cap));
         if (data == nullptr)
+        {
             throw std::bad_alloc ();
+        }
         out.data.release ();
         out.data.reset (data);
         capacity = cap;

@@ -39,6 +39,12 @@ add_json_benches(join adapters/join.hpp join::json
     PRETTIFY   JoinAdapter
     STATISTICS JoinAdapter
 )
+add_json_benches(join_zero_copy adapters/join.hpp join::json
+    PARSE      JoinZeroCopyAdapter
+    STRINGIFY  JoinZeroCopyAdapter
+    PRETTIFY   JoinZeroCopyAdapter
+    STATISTICS JoinZeroCopyAdapter
+)
 add_json_benches(jsoncons adapters/jsoncons.hpp jsoncons::jsoncons
     PARSE      JsonConsAdapter JsonConsLosslessAdapter
     STRINGIFY  JsonConsAdapter JsonConsLosslessAdapter

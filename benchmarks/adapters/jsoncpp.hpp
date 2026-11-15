@@ -13,8 +13,7 @@
 
 namespace jsoncpp_detail
 {
-
-    inline void gen_stat (Stat& stat, const Json::Value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const Json::Value& v)
     {
         switch (v.type ())
         {
@@ -58,9 +57,13 @@ namespace jsoncpp_detail
 
             case Json::booleanValue:
                 if (v.asBool ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case Json::nullValue:
@@ -68,7 +71,6 @@ namespace jsoncpp_detail
                 break;
         }
     }
-
 }
 
 struct JsonCppAdapter
@@ -87,7 +89,9 @@ struct JsonCppAdapter
         Document doc;
         std::string errors;
         if (!reader->parse (json.data (), json.data () + json.size (), &doc, &errors))
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -142,7 +146,9 @@ struct JsonCppAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->isArray () || doc->empty () || !(*doc)[0].isNumeric ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].asDouble ();
     }
 
@@ -150,7 +156,9 @@ struct JsonCppAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->isArray () || doc->empty () || !(*doc)[0].isString ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].asString ();
     }
 };

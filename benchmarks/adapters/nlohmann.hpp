@@ -10,8 +10,7 @@
 
 namespace nlohmann_detail
 {
-
-    inline void gen_stat (Stat& stat, const nlohmann::json& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const nlohmann::json& v)
     {
         switch (v.type ())
         {
@@ -48,9 +47,13 @@ namespace nlohmann_detail
 
             case nlohmann::json::value_t::boolean:
                 if (v.get<bool> ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case nlohmann::json::value_t::null:
@@ -61,7 +64,6 @@ namespace nlohmann_detail
                 break;
         }
     }
-
 }
 
 struct NlohmannAdapter
@@ -74,7 +76,9 @@ struct NlohmannAdapter
     {
         Document doc = Document::parse (json, nullptr, false);
         if (doc.is_discarded ())
+        {
             return std::nullopt;
+        }
         return doc;
     }
 
@@ -97,14 +101,16 @@ struct NlohmannAdapter
 
     static bool accepts (std::string_view json)
     {
-        return Document::accept (json);
+        return parse (json).has_value ();
     }
 
     static std::optional<double> parse_number (std::string_view json)
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->empty () || !(*doc)[0].is_number ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].get<double> ();
     }
 
@@ -112,7 +118,9 @@ struct NlohmannAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->empty () || !(*doc)[0].is_string ())
+        {
             return std::nullopt;
+        }
         return (*doc)[0].get<std::string> ();
     }
 };

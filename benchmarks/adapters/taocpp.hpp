@@ -10,8 +10,7 @@
 
 namespace taocpp_detail
 {
-
-    inline void gen_stat (Stat& stat, const tao::json::value& v)
+    STAT_WALK inline void gen_stat (Stat& stat, const tao::json::value& v)
     {
         switch (v.type ())
         {
@@ -53,9 +52,13 @@ namespace taocpp_detail
 
             case tao::json::type::BOOLEAN:
                 if (v.get_boolean ())
+                {
                     stat.true_count++;
+                }
                 else
+                {
                     stat.false_count++;
+                }
                 break;
 
             case tao::json::type::NULL_:
@@ -66,7 +69,6 @@ namespace taocpp_detail
                 break;
         }
     }
-
 }
 
 struct TaoCppAdapter
@@ -113,7 +115,9 @@ struct TaoCppAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->get_array ().empty ())
+        {
             return std::nullopt;
+        }
         try
         {
             return doc->get_array ()[0].as<double> ();
@@ -128,12 +132,18 @@ struct TaoCppAdapter
     {
         auto doc = parse (json);
         if (!doc || !doc->is_array () || doc->get_array ().empty ())
+        {
             return std::nullopt;
+        }
         const auto& elem = doc->get_array ()[0];
         if (!elem.is_string ())
+        {
             return std::nullopt;
+        }
         if (elem.type () == tao::json::type::STRING)
+        {
             return elem.get_string ();
+        }
         return std::string (elem.get_string_view ());
     }
 };
